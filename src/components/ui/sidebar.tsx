@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { usePrivy } from '@privy-io/react-auth';
 import {
   HomeIcon,
   ShoppingCartIcon,
@@ -10,7 +11,8 @@ import {
   BanknotesIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  QuestionMarkCircleIcon
+  QuestionMarkCircleIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
@@ -21,6 +23,7 @@ interface SidebarProps {
 export function Sidebar({ isExpanded, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { logout } = usePrivy();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   const menuItems = [
@@ -133,8 +136,8 @@ export function Sidebar({ isExpanded, onToggle }: SidebarProps) {
         })}
       </nav>
 
-      {/* Help Section - Bottom */}
-      <div className="absolute bottom-4 left-2 right-2">
+      {/* Bottom Section - Help and Logout */}
+      <div className="absolute bottom-4 left-2 right-2 space-y-2">
         <button
           className={`
             w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
@@ -144,6 +147,27 @@ export function Sidebar({ isExpanded, onToggle }: SidebarProps) {
         >
           <QuestionMarkCircleIcon className="w-5 h-5 flex-shrink-0" />
           {isExpanded && <span className="text-sm">Help</span>}
+        </button>
+
+        <button
+          onClick={logout}
+          onMouseEnter={() => setHoveredItem('logout')}
+          onMouseLeave={() => setHoveredItem(null)}
+          className={`
+            w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+            text-gray-600 hover:bg-gray-50 transition-all relative
+            ${!isExpanded ? 'justify-center' : ''}
+          `}
+        >
+          <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
+          {isExpanded && <span className="text-sm">Logout</span>}
+
+          {/* Tooltip for collapsed state */}
+          {!isExpanded && hoveredItem === 'logout' && (
+            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-50">
+              Logout
+            </div>
+          )}
         </button>
       </div>
     </aside>

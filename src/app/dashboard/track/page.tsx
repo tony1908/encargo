@@ -8,14 +8,14 @@ export default function TrackContainerPage() {
   const [containerNumber, setContainerNumber] = useState('');
   const [trackingData, setTrackingData] = useState<any>(null);
 
-  // Mock tracking data
+  // Mock tracking data - positioned in Pacific Ocean
   const mockTrackingData = {
     containerNumber: 'MSCU1234567',
     status: 'In Transit',
     currentLocation: {
-      name: 'Port of Singapore',
-      lat: 1.2644,
-      lng: 103.8228,
+      name: 'Pacific Ocean - 850nm from LA',
+      lat: 25.5, // Positioned in the Pacific Ocean
+      lng: -140.0, // Between Asia and USA
     },
     origin: {
       name: 'Shanghai, China',
@@ -39,19 +39,20 @@ export default function TrackContainerPage() {
       {
         location: 'Port of Singapore',
         date: '2024-11-28',
-        status: 'Arrived',
+        status: 'Transit Stop',
         completed: true,
       },
       {
-        location: 'Singapore',
-        date: '2024-11-30',
-        status: 'In Transit',
+        location: 'Pacific Ocean',
+        date: '2024-12-01',
+        status: 'Currently at Sea',
         completed: false,
+        current: true,
       },
       {
         location: 'Los Angeles, USA',
         date: '2024-12-15',
-        status: 'Expected',
+        status: 'Expected Arrival',
         completed: false,
       },
     ],
@@ -111,21 +112,48 @@ export default function TrackContainerPage() {
               <div className="h-[400px] relative">
                 <Map
                   defaultCenter={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
-                  defaultZoom={4}
+                  defaultZoom={3}
                 >
-                  {/* Origin */}
+                  {/* Origin Port */}
                   <Marker
                     width={30}
                     anchor={[trackingData.origin.lat, trackingData.origin.lng]}
                     color="#9ca3af"
                   />
-                  {/* Current */}
+
+                  {/* Current Location - Ship */}
                   <Marker
-                    width={40}
+                    width={50}
                     anchor={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
-                    color="#111827"
-                  />
-                  {/* Destination */}
+                  >
+                    <div className="relative">
+                      {/* Ship icon using SVG */}
+                      <svg
+                        width="40"
+                        height="40"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="transform -translate-x-1/2 -translate-y-1/2"
+                      >
+                        <circle cx="12" cy="12" r="11" fill="white" stroke="#111827" strokeWidth="1"/>
+                        {/* Ship icon */}
+                        <path
+                          d="M12 6v7l-5 3v2a1 1 0 001 1h8a1 1 0 001-1v-2l-5-3V6m0 0L9 8m3-2l3 2"
+                          stroke="#111827"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      {/* Pulse animation */}
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <div className="w-10 h-10 bg-gray-900 rounded-full opacity-20 animate-ping"></div>
+                      </div>
+                    </div>
+                  </Marker>
+
+                  {/* Destination Port */}
                   <Marker
                     width={30}
                     anchor={[trackingData.destination.lat, trackingData.destination.lng]}
@@ -140,8 +168,10 @@ export default function TrackContainerPage() {
                     <span className="text-gray-600">Origin</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 bg-gray-900 rounded-full"></div>
-                    <span className="text-gray-600">Current</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-gray-900">
+                      <path d="M12 6v7l-5 3v2a1 1 0 001 1h8a1 1 0 001-1v-2l-5-3V6" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                    <span className="text-gray-600">Ship (Current)</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-2.5 h-2.5 bg-gray-300 rounded-full"></div>
@@ -162,15 +192,17 @@ export default function TrackContainerPage() {
                         className={`w-8 h-8 rounded-full flex items-center justify-center ${
                           event.completed
                             ? 'bg-gray-900'
-                            : index === 2
-                            ? 'bg-gray-600'
+                            : event.current
+                            ? 'bg-gray-900'
                             : 'bg-gray-200'
                         }`}
                       >
                         {event.completed ? (
                           <CheckCircleIcon className="w-4 h-4 text-white" />
-                        ) : index === 2 ? (
-                          <TruckIcon className="w-4 h-4 text-white" />
+                        ) : event.current ? (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white">
+                            <path d="M12 6v7l-5 3v2a1 1 0 001 1h8a1 1 0 001-1v-2l-5-3V6" stroke="currentColor" strokeWidth="2"/>
+                          </svg>
                         ) : (
                           <MapPinIcon className="w-4 h-4 text-gray-500" />
                         )}
@@ -191,8 +223,8 @@ export default function TrackContainerPage() {
                       <p className={`text-xs ${
                         event.completed
                           ? 'text-gray-600'
-                          : index === 2
-                          ? 'text-gray-900'
+                          : event.current
+                          ? 'text-gray-900 font-medium'
                           : 'text-gray-500'
                       }`}>
                         {event.status}
