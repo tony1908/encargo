@@ -32,59 +32,21 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 p-12 flex-col justify-between">
-        <div>
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-              <span className="text-white font-bold text-2xl">C</span>
-            </div>
-            <h1 className="text-2xl font-bold text-white">CargoEncar</h1>
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="w-full max-w-sm px-6">
+        {/* Logo */}
+        <div className="flex items-center gap-2 mb-12 justify-center">
+          <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
+            <span className="text-white font-medium">C</span>
           </div>
-
-          <div className="space-y-8 mt-20">
-            <h2 className="text-4xl font-bold text-white leading-tight">
-              Protect Your Cargo<br />
-              <span className="text-indigo-200">Against Delays</span>
-            </h2>
-            <p className="text-lg text-indigo-100 max-w-md">
-              Real-time container tracking with comprehensive insurance coverage.
-              Get compensated for every day of delay.
-            </p>
-          </div>
+          <span className="text-xl font-medium text-gray-900">CargoEncar</span>
         </div>
 
-        <div className="grid grid-cols-3 gap-6 text-white">
+        {/* Login Form */}
+        <div className="space-y-6">
           <div>
-            <div className="text-3xl font-bold">98%</div>
-            <div className="text-sm text-indigo-200">Claims Approved</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold">24h</div>
-            <div className="text-sm text-indigo-200">Response Time</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold">$5M+</div>
-            <div className="text-sm text-indigo-200">Protected Value</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right side - Login */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md space-y-8">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">C</span>
-            </div>
-            <h1 className="text-xl font-bold text-gray-900">CargoEncar</h1>
-          </div>
-
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
-            <p className="text-gray-600">Sign in to manage your cargo insurance</p>
+            <h1 className="text-2xl font-medium text-gray-900">Sign in</h1>
+            <p className="text-sm text-gray-500 mt-1">Cargo insurance platform</p>
           </div>
 
           <button
@@ -94,43 +56,35 @@ export default function Home() {
                 (document.querySelector('input[type="email"]') as HTMLInputElement)?.focus();
               }, 150);
             }}
-            className="w-full rounded-xl bg-indigo-600 px-8 py-4 text-base font-semibold text-white shadow-lg hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all hover:shadow-xl"
+            className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
           >
-            Sign In
+            Continue
           </button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">New to CargoEncar?</span>
-            </div>
-          </div>
 
           <div className="text-center">
             <button
               onClick={() => login()}
-              className="text-indigo-600 font-medium hover:text-indigo-500 transition-colors"
+              className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
             >
-              Create an account
+              Create account
             </button>
           </div>
+        </div>
 
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <div className="grid grid-cols-3 gap-4 text-center text-sm text-gray-600">
-              <div>
-                <div className="font-semibold text-gray-900">Instant</div>
-                <div>Coverage</div>
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">Real-time</div>
-                <div>Tracking</div>
-              </div>
-              <div>
-                <div className="font-semibold text-gray-900">Fast</div>
-                <div>Claims</div>
-              </div>
+        {/* Footer Stats */}
+        <div className="mt-16 pt-8 border-t border-gray-100">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-lg font-medium text-gray-900">98%</div>
+              <div className="text-xs text-gray-500">Claims</div>
+            </div>
+            <div>
+              <div className="text-lg font-medium text-gray-900">24h</div>
+              <div className="text-xs text-gray-500">Response</div>
+            </div>
+            <div>
+              <div className="text-lg font-medium text-gray-900">$5M</div>
+              <div className="text-xs text-gray-500">Protected</div>
             </div>
           </div>
         </div>

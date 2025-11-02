@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   HomeIcon,
@@ -7,134 +8,144 @@ import {
   MapIcon,
   ClockIcon,
   BanknotesIcon,
-  XMarkIcon
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
-  isOpen?: boolean;
-  onClose?: () => void;
+  isExpanded: boolean;
+  onToggle: () => void;
 }
 
-export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
+export function Sidebar({ isExpanded, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   const menuItems = [
     {
       name: 'Dashboard',
       icon: HomeIcon,
       path: '/dashboard',
-      description: 'Overview'
     },
     {
       name: 'Buy Insurance',
       icon: ShoppingCartIcon,
       path: '/dashboard/buy',
-      description: 'Protect your cargo'
     },
     {
-      name: 'Track Container',
+      name: 'Track',
       icon: MapIcon,
       path: '/dashboard/track',
-      description: 'Real-time tracking'
     },
     {
-      name: 'Delivery Status',
+      name: 'Status',
       icon: ClockIcon,
       path: '/dashboard/status',
-      description: 'Check status'
     },
     {
-      name: 'Claim Insurance',
+      name: 'Claims',
       icon: BanknotesIcon,
       path: '/dashboard/claim',
-      description: 'File a claim'
     },
   ];
 
   const handleNavigation = (path: string) => {
     router.push(path);
-    if (onClose) onClose();
   };
 
   return (
-    <>
-      {/* Overlay for mobile */}
-      {isOpen && onClose && (
-        <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed top-0 left-0 z-50 h-screen
-          w-72 bg-white border-r border-gray-200
-          transform transition-transform duration-300 ease-in-out
-          lg:transform-none lg:translate-x-0
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
-      >
-        {/* Header */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">C</span>
+    <aside
+      className={`
+        fixed top-0 left-0 z-40 h-screen bg-white border-r border-gray-100
+        transition-all duration-300 ease-in-out
+        ${isExpanded ? 'w-56' : 'w-16'}
+      `}
+    >
+      {/* Header */}
+      <div className="h-16 flex items-center justify-center border-b border-gray-100 relative">
+        {isExpanded ? (
+          <div className="flex items-center gap-2 px-4">
+            <div className="w-7 h-7 bg-black rounded flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-medium text-sm">C</span>
             </div>
-            <h1 className="text-lg font-bold text-gray-900">CargoEncar</h1>
+            <span className="font-medium text-gray-900">CargoEncar</span>
           </div>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <XMarkIcon className="w-5 h-5 text-gray-600" />
-            </button>
-          )}
-        </div>
+        ) : (
+          <div className="w-7 h-7 bg-black rounded flex items-center justify-center">
+            <span className="text-white font-medium text-sm">C</span>
+          </div>
+        )}
+      </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-1">
-          {menuItems.map((item) => {
-            const isActive = pathname === item.path;
-            const Icon = item.icon;
+      {/* Toggle Button */}
+      <button
+        onClick={onToggle}
+        className="absolute -right-3 top-20 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm"
+      >
+        {isExpanded ? (
+          <ChevronLeftIcon className="w-3 h-3 text-gray-600" />
+        ) : (
+          <ChevronRightIcon className="w-3 h-3 text-gray-600" />
+        )}
+      </button>
 
-            return (
+      {/* Navigation */}
+      <nav className="p-2 space-y-1">
+        {menuItems.map((item) => {
+          const isActive = pathname === item.path;
+          const Icon = item.icon;
+
+          return (
+            <div key={item.path} className="relative">
               <button
-                key={item.path}
                 onClick={() => handleNavigation(item.path)}
+                onMouseEnter={() => setHoveredItem(item.path)}
+                onMouseLeave={() => setHoveredItem(null)}
                 className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-lg
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
                   transition-all duration-200
                   ${
                     isActive
-                      ? 'bg-indigo-50 text-indigo-600 font-medium'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-600 hover:bg-gray-50'
                   }
+                  ${!isExpanded ? 'justify-center' : ''}
                 `}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-gray-500'}`} />
-                <div className="flex flex-col items-start">
-                  <span className="text-sm">{item.name}</span>
-                  <span className={`text-xs ${isActive ? 'text-indigo-500' : 'text-gray-400'}`}>
-                    {item.description}
+                <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                {isExpanded && (
+                  <span className={`text-sm ${isActive ? 'text-white font-medium' : ''}`}>
+                    {item.name}
                   </span>
-                </div>
+                )}
               </button>
-            );
-          })}
-        </nav>
 
-        {/* Footer info */}
-        <div className="absolute bottom-6 left-4 right-4 p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-100">
-          <p className="text-xs font-medium text-gray-900 mb-1">Need Help?</p>
-          <p className="text-xs text-gray-600">
-            Contact support for assistance with your insurance claims.
-          </p>
-        </div>
-      </aside>
-    </>
+              {/* Tooltip for collapsed state */}
+              {!isExpanded && hoveredItem === item.path && (
+                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-50">
+                  {item.name}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* Help Section - Bottom */}
+      <div className="absolute bottom-4 left-2 right-2">
+        <button
+          className={`
+            w-full flex items-center gap-3 px-3 py-2.5 rounded-lg
+            text-gray-500 hover:bg-gray-50 transition-all
+            ${!isExpanded ? 'justify-center' : ''}
+          `}
+        >
+          <QuestionMarkCircleIcon className="w-5 h-5 flex-shrink-0" />
+          {isExpanded && <span className="text-sm">Help</span>}
+        </button>
+      </div>
+    </aside>
   );
 }

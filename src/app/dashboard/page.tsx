@@ -11,110 +11,105 @@ export default function DashboardPage() {
   const quickActions = [
     {
       name: 'Buy Insurance',
-      description: 'Protect your cargo against delays',
+      description: 'Protect cargo',
       icon: ShoppingCartIcon,
-      color: 'from-blue-500 to-blue-600',
       path: '/dashboard/buy'
     },
     {
-      name: 'Track Container',
-      description: 'View real-time location',
+      name: 'Track',
+      description: 'Real-time location',
       icon: MapIcon,
-      color: 'from-green-500 to-green-600',
       path: '/dashboard/track'
     },
     {
-      name: 'Check Status',
-      description: 'View delivery status',
+      name: 'Status',
+      description: 'Delivery updates',
       icon: ClockIcon,
-      color: 'from-purple-500 to-purple-600',
       path: '/dashboard/status'
     },
     {
-      name: 'File Claim',
-      description: 'Claim for late delivery',
+      name: 'Claims',
+      description: 'File claims',
       icon: BanknotesIcon,
-      color: 'from-orange-500 to-orange-600',
       path: '/dashboard/claim'
     },
   ];
 
   const stats = [
-    { label: 'Active Policies', value: '3' },
-    { label: 'Total Coverage', value: '$250K' },
-    { label: 'Claims Pending', value: '1' },
-    { label: 'Containers Tracked', value: '5' },
+    { label: 'Policies', value: '3', trend: '+2' },
+    { label: 'Coverage', value: '$250K', trend: null },
+    { label: 'Pending', value: '1', trend: '-1' },
+    { label: 'Tracked', value: '5', trend: '+3' },
   ];
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
-      {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
-        <p className="text-indigo-100">
-          {user?.email?.address || user?.phone?.number || user?.wallet?.address || 'User'}
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-medium text-gray-900">Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          {user?.email?.address || user?.phone?.number || user?.wallet?.address || 'Welcome'}
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4 mb-8">
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
-            <div className="text-sm text-gray-600">{stat.label}</div>
+          <div key={stat.label} className="bg-white p-4 rounded-lg border border-gray-100">
+            <div className="flex items-baseline gap-2">
+              <div className="text-xl font-medium text-gray-900">{stat.value}</div>
+              {stat.trend && (
+                <span className={`text-xs ${stat.trend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                  {stat.trend}
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
           </div>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.name}
-                onClick={() => router.push(action.path)}
-                className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all hover:scale-105 text-left"
-              >
-                <div className={`w-12 h-12 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center mb-4`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-1">{action.name}</h3>
-                <p className="text-sm text-gray-600">{action.description}</p>
-              </button>
-            );
-          })}
-        </div>
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        {quickActions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <button
+              key={action.name}
+              onClick={() => router.push(action.path)}
+              className="bg-white p-6 rounded-lg border border-gray-100 hover:border-gray-300 transition-colors text-left group"
+            >
+              <Icon className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors mb-3" />
+              <h3 className="text-sm font-medium text-gray-900">{action.name}</h3>
+              <p className="text-xs text-gray-500 mt-0.5">{action.description}</p>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
+      {/* Activity Feed */}
+      <div className="bg-white rounded-lg border border-gray-100 p-6">
+        <h2 className="text-sm font-medium text-gray-900 mb-4">Activity</h2>
         <div className="space-y-4">
-          <div className="flex items-start gap-4 pb-4 border-b border-gray-100">
-            <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Insurance Policy Activated</p>
-              <p className="text-xs text-gray-600 mt-1">Container #MSCU123456 - $50,000 coverage</p>
-              <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+          <div className="flex gap-3">
+            <div className="w-1 bg-gray-900 rounded-full flex-shrink-0"></div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-gray-900">Policy activated</p>
+              <p className="text-xs text-gray-500 mt-0.5">MSCU123456 • $50,000 • 2h ago</p>
             </div>
           </div>
-          <div className="flex items-start gap-4 pb-4 border-b border-gray-100">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Container Location Updated</p>
-              <p className="text-xs text-gray-600 mt-1">Container #HLCU987654 arrived at Port of Singapore</p>
-              <p className="text-xs text-gray-500 mt-1">5 hours ago</p>
+          <div className="flex gap-3">
+            <div className="w-1 bg-gray-400 rounded-full flex-shrink-0"></div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-gray-900">Location update</p>
+              <p className="text-xs text-gray-500 mt-0.5">HLCU987654 • Singapore • 5h ago</p>
             </div>
           </div>
-          <div className="flex items-start gap-4">
-            <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Claim Approved</p>
-              <p className="text-xs text-gray-600 mt-1">$2,500 compensation for Container #TCLU456789</p>
-              <p className="text-xs text-gray-500 mt-1">1 day ago</p>
+          <div className="flex gap-3">
+            <div className="w-1 bg-gray-400 rounded-full flex-shrink-0"></div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-gray-900">Claim approved</p>
+              <p className="text-xs text-gray-500 mt-0.5">TCLU456789 • $2,500 • 1d ago</p>
             </div>
           </div>
         </div>

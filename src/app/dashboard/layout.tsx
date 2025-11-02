@@ -4,26 +4,24 @@ import { useState } from 'react';
 import { ProtectedRoute } from '@/providers/auth-provider';
 import { Header } from '@/components/ui/header';
 import { Sidebar } from '@/components/ui/sidebar';
-import { Footer } from '@/components/ui/footer';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-white flex">
         {/* Sidebar */}
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar isExpanded={sidebarExpanded} onToggle={() => setSidebarExpanded(!sidebarExpanded)} />
 
         {/* Main content area */}
-        <div className="flex-1 lg:ml-72 flex flex-col min-h-screen">
-          <Header onMenuClick={() => setSidebarOpen(true)} />
-          <main className="flex-1 bg-gray-50">{children}</main>
-          <Footer />
+        <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarExpanded ? 'ml-56' : 'ml-16'}`}>
+          <Header />
+          <main className="flex-1 bg-white">{children}</main>
         </div>
       </div>
     </ProtectedRoute>
