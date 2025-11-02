@@ -1,25 +1,28 @@
 'use client';
 
-import { usePrivy } from '@privy-io/react-auth';
+import { Bars3Icon } from '@heroicons/react/24/outline';
 import { ProfileButton } from "./profile-button";
 
-export function Header() {
-  const { logout } = usePrivy();
+interface HeaderProps {
+  onMenuClick?: () => void;
+  title?: string;
+}
 
+export function Header({ onMenuClick, title = 'Dashboard' }: HeaderProps) {
   return (
-    <header className="h-[60px] flex flex-row justify-between items-center px-6 border-b bg-white border-[#E2E3F0]">
-      <div className="flex flex-row items-center gap-2 h-[26px]">
-        <h1 className="text-xl font-abc-favorit font-medium">Dashboard</h1>
+    <header className="h-16 flex items-center justify-between px-6 bg-white border-b border-gray-200">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          <Bars3Icon className="w-6 h-6 text-gray-600" />
+        </button>
+        <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
       </div>
 
-      <div className="flex flex-row justify-end items-center gap-4 h-9">
+      <div className="flex items-center gap-4">
         <ProfileButton />
-        <button
-          onClick={logout}
-          className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
-        >
-          Logout
-        </button>
       </div>
     </header>
   );

@@ -32,6 +32,9 @@ importers:
       next:
         specifier: 15.5.3
         version: 15.5.3(@babel/core@7.28.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      pigeon-maps:
+        specifier: ^0.21.0
+        version: 0.21.6(react@19.1.0)
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -3626,6 +3629,11 @@ packages:
   pify@5.0.0:
     resolution: {integrity: sha512-eW/gHNMlxdSP6dmG6uJip6FXN0EQBwm2clYYd8Wul42Cwu/DK8HEftzsapcNdYe2MfLiIwZqsDk2RDEsTE79hA==}
     engines: {node: '>=10'}
+
+  pigeon-maps@0.21.6:
+    resolution: {integrity: sha512-6io58lhpbtVT/DUKDoOqsjeAFW46Nfe+gr4PX/kmD1dyJxfb8WaT4hcgwcmM8dJdkyfibgLHo59Uo2o2/xscaQ==}
+    peerDependencies:
+      react: '*'
 
   pino-abstract-transport@0.5.0:
     resolution: {integrity: sha512-+KAgmVeqXYbTtU2FScx1XS3kNyfZ5TrXY07V96QnUSFqo2gAqlvmaxH67Lj7SWazqsMabf+58ctdTcBgnOLUOQ==}
@@ -10119,6 +10127,10 @@ snapshots:
   pify@3.0.0: {}
 
   pify@5.0.0: {}
+
+  pigeon-maps@0.21.6(react@19.1.0):
+    dependencies:
+      react: 19.1.0
 
   pino-abstract-transport@0.5.0:
     dependencies:
