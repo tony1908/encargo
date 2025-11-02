@@ -1,3 +1,20 @@
+## Contract Addresses
+
+### Arbitrum Sepolia
+- **Insurance Contract**: `0xDE5d818E49F12E1feB107F320276D84Cb544b767`
+- **Token Contract**: `0x8420eEC4b6C5Df04D3bf8eA282aD2C8bE35858Cd`
+- **Explorer**: https://sepolia.arbiscan.io
+
+### Scroll Sepolia
+- **Insurance Contract**: `0x8420eEC4b6C5Df04D3bf8eA282aD2C8bE35858Cd`
+- **Token Contract**: `0xd880112AeC1307eBE2886e4fB0daec82564f3a65`
+- **Explorer**: https://sepolia.scrollscan.com
+
+### Stylus Contract
+- **Address**: `0xf9e1ccc93c1b353888def17506f95b5d5363d902`
+
+---
+
 ## ENS Offchain Subnames + Privy Starter Kit
 
 A Next.js starter kit demonstrating the integration of Namespace Offchain Subnames with Privy authentication. Create and manage ENS subnames with a clean, production-ready UX: wallet auth, identity resolution, username creation, and avatar uploads.
