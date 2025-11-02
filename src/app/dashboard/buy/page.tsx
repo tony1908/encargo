@@ -511,7 +511,7 @@ export default function BuyInsurancePage() {
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <p className="text-xs text-gray-600">Approval Transaction:</p>
                   <a
-                    href={`{explorer}/tx/${approvalTxHash}`}
+                    href={`${explorer}/tx/${approvalTxHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs font-mono text-gray-900 hover:underline break-all"
@@ -525,7 +525,7 @@ export default function BuyInsurancePage() {
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <p className="text-xs text-gray-600">Purchase Transaction:</p>
                   <a
-                    href={`{explorer}/tx/${txHash}`}
+                    href={`${explorer}/tx/${txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs font-mono text-gray-900 hover:underline break-all"
