@@ -14,6 +14,7 @@ interface Policy {
   containerId: string;
   expectedArrival: Date;
   active: boolean;
+  delayed: boolean;
   delivered: boolean;
   actualArrival: Date | null;
   claimedDays: number;
@@ -107,7 +108,8 @@ export default function ClaimInsurancePage() {
                 containerId: policy[1],
                 expectedArrival: new Date(Number(policy[2]) * 1000),
                 active: policy[3],
-                delivered: policy[5], // Note: delayed is at index 4, delivered at index 5
+                delayed: policy[4], // delayed status from contract
+                delivered: policy[5],
                 actualArrival: policy[6] > 0 ? new Date(Number(policy[6]) * 1000) : null,
                 claimedDays: Number(policy[7]),
                 claimableDays: Number(claimableDays),
@@ -249,8 +251,9 @@ export default function ClaimInsurancePage() {
 
   const selectedPolicyData = userPolicies.find(p => p.policyId === selectedPolicy);
 
-  // Filter eligible policies (those with claimable days > 0)
-  const eligiblePolicies = userPolicies.filter(p => p.claimableDays > 0);
+  // Filter eligible policies (any policy marked as delayed can attempt to claim)
+  // The smart contract will validate if there are actual claimable days
+  const eligiblePolicies = userPolicies.filter(p => p.delayed);
 
   if (claimSubmitted) {
     return (
@@ -264,7 +267,7 @@ export default function ClaimInsurancePage() {
             Your claim has been processed on-chain. Compensation has been transferred to your wallet.
           </p>
 
-          {selectedPolicyData && (
+          {selectedPolicyData && selectedPolicyData.claimableDays > 0 && (
             <div className="bg-gray-900 text-white rounded-lg p-6 mb-8">
               <p className="text-xs text-gray-400 mb-2">Total Compensation</p>
               <p className="text-3xl font-medium">
@@ -347,7 +350,8 @@ export default function ClaimInsurancePage() {
                 <p className="text-sm text-gray-500">No policies eligible for claims</p>
                 {userPolicies.length > 0 && (
                   <p className="text-xs text-gray-400 mt-2">
-                    You have {userPolicies.length} active {userPolicies.length === 1 ? 'policy' : 'policies'}
+                    You have {userPolicies.length} {userPolicies.length === 1 ? 'policy' : 'policies'}.
+                    Only policies marked as delayed can be claimed.
                   </p>
                 )}
               </div>
@@ -365,15 +369,20 @@ export default function ClaimInsurancePage() {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="font-mono text-sm font-medium text-gray-900">
-                          {policy.containerId}
-                        </h3>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-mono text-sm font-medium text-gray-900">
+                            {policy.containerId}
+                          </h3>
+                          <span className="px-1.5 py-0.5 bg-gray-700 text-white text-xs font-medium rounded">
+                            Delayed
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500">
                           Policy #{policy.policyId}
                         </p>
                       </div>
                       <div className="px-2 py-0.5 bg-gray-900 text-white text-xs font-medium rounded">
-                        {policy.claimableDays}d claimable
+                        {policy.claimableDays > 0 ? `${policy.claimableDays}d claimable` : 'Claimable'}
                       </div>
                     </div>
 
@@ -442,19 +451,21 @@ export default function ClaimInsurancePage() {
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Daily rate</span>
                       <span className="text-gray-900">
-                        {contractPricing.payoutPerDay} ETH
+                        {contractPricing.payoutPerDay} Tokens
                       </span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">Claimable days</span>
                       <span className="text-gray-900">
-                        {selectedPolicyData.claimableDays}
+                        {selectedPolicyData.claimableDays > 0 ? selectedPolicyData.claimableDays : 'TBD by contract'}
                       </span>
                     </div>
                     <div className="pt-2 border-t border-gray-200 flex justify-between">
-                      <span className="text-sm font-medium text-gray-900">Total</span>
+                      <span className="text-sm font-medium text-gray-900">Estimated Total</span>
                       <span className="text-lg font-medium text-gray-900">
-                        {(parseFloat(contractPricing.payoutPerDay) * selectedPolicyData.claimableDays).toFixed(4)} Tokens
+                        {selectedPolicyData.claimableDays > 0
+                          ? `${(parseFloat(contractPricing.payoutPerDay) * selectedPolicyData.claimableDays).toFixed(4)} Tokens`
+                          : 'Calculated on claim'}
                       </span>
                     </div>
                   </div>
@@ -475,7 +486,11 @@ export default function ClaimInsurancePage() {
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   }`}
                 >
-                  {isLoading ? 'Processing...' : `Submit Claim - ${(parseFloat(contractPricing.payoutPerDay) * selectedPolicyData.claimableDays).toFixed(4)} Tokens`}
+                  {isLoading
+                    ? 'Processing...'
+                    : selectedPolicyData.claimableDays > 0
+                    ? `Submit Claim - ${(parseFloat(contractPricing.payoutPerDay) * selectedPolicyData.claimableDays).toFixed(4)} Tokens`
+                    : 'Submit Claim'}
                 </button>
               </form>
             </div>
@@ -498,6 +513,10 @@ export default function ClaimInsurancePage() {
           <div className="bg-white rounded-lg border border-gray-100 p-4">
             <h3 className="text-sm font-medium text-gray-900 mb-3">How Claims Work</h3>
             <ul className="space-y-2 text-xs text-gray-600">
+              <li className="flex items-start gap-2">
+                <span className="text-gray-900">•</span>
+                <span>Only delayed policies are eligible</span>
+              </li>
               <li className="flex items-start gap-2">
                 <span className="text-gray-900">•</span>
                 <span>Automatic calculation based on delay</span>
@@ -535,14 +554,18 @@ export default function ClaimInsurancePage() {
                         {policy.containerId}
                       </p>
                       <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
-                        policy.claimableDays > 0
+                        policy.delayed && policy.claimableDays > 0
                           ? 'bg-gray-900 text-white'
+                          : policy.delayed
+                          ? 'bg-gray-700 text-white'
                           : policy.delivered
                           ? 'bg-gray-100 text-gray-700'
                           : 'bg-gray-50 text-gray-600'
                       }`}>
-                        {policy.claimableDays > 0
+                        {policy.delayed && policy.claimableDays > 0
                           ? 'Claimable'
+                          : policy.delayed
+                          ? 'Delayed'
                           : policy.delivered
                           ? 'Delivered'
                           : 'Active'}
@@ -550,6 +573,11 @@ export default function ClaimInsurancePage() {
                     </div>
                     <div className="text-xs text-gray-500">
                       <p>Policy #{policy.policyId} • {policy.expectedArrival.toLocaleDateString()}</p>
+                      {policy.delayed && (
+                        <p className="text-gray-900 mt-0.5">
+                          {policy.claimableDays > 0 ? `${policy.claimableDays} days claimable` : 'Ready to claim'}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))

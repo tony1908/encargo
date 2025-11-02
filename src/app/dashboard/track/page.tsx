@@ -104,39 +104,64 @@ export default function TrackContainerPage() {
         return;
       }
 
+      // Define waypoints for trans-Pacific shipping route
+      const waypoints = [
+        { lat: 31.2304, lng: 121.4737, name: 'Shanghai, China' },        // Origin
+        { lat: 20.0, lng: 140.0, name: 'Philippine Sea' },               // Philippine Sea
+        { lat: 25.0, lng: 160.0, name: 'Mid-Pacific' },                  // Mid-Pacific
+        { lat: 30.0, lng: -170.0, name: 'North Pacific' },               // North Pacific
+        { lat: 32.0, lng: -140.0, name: 'Eastern Pacific' },             // Eastern Pacific
+        { lat: 33.7701, lng: -118.1937, name: 'Los Angeles, USA' },      // Destination
+      ];
+
       // Calculate current position based on time elapsed
       const now = Date.now();
-      const startDate = new Date(matchingPolicy.expectedArrival.getTime() - 25 * 24 * 60 * 60 * 1000); // 25 days before arrival
-      const totalJourney = matchingPolicy.expectedArrival.getTime() - startDate.getTime();
+      const expectedArrivalTime = matchingPolicy.expectedArrival.getTime();
+      const startDate = new Date(expectedArrivalTime - 25 * 24 * 60 * 60 * 1000); // 25 days before arrival
+      const totalJourney = expectedArrivalTime - startDate.getTime();
       const elapsed = now - startDate.getTime();
-      const progress = Math.min(Math.max(elapsed / totalJourney, 0), 1);
 
-      // Simulate positions from Shanghai to LA
-      const originLat = 31.2304;
-      const originLng = 121.4737;
-      const destLat = 33.7701;
-      const destLng = -118.1937;
+      // Calculate progress with bounds
+      let progress = Math.min(Math.max(elapsed / totalJourney, 0), 1);
 
-      // Calculate current position (simplified linear interpolation)
-      // In reality, ships follow specific shipping lanes
-      const currentLat = originLat + (destLat - originLat) * progress;
-      const currentLng = originLng + (destLng - originLng) * progress;
+      // If delivered, ship is at destination
+      if (matchingPolicy.delivered) {
+        progress = 1;
+      }
+      // If the expected arrival is far in the future or past, place ship in mid-ocean
+      else if (progress < 0.1 || expectedArrivalTime < now - 30 * 24 * 60 * 60 * 1000) {
+        // Place at mid-ocean point for visibility
+        progress = 0.5;
+      }
 
-      // Determine location name based on progress
-      let locationName = 'Pacific Ocean';
-      if (progress < 0.15) locationName = 'East China Sea';
-      else if (progress < 0.3) locationName = 'Philippine Sea';
-      else if (progress < 0.8) locationName = 'Pacific Ocean';
-      else if (progress < 0.95) locationName = 'Near California Coast';
+      // Calculate current position along waypoints
+      const segmentCount = waypoints.length - 1;
+      const segmentProgress = progress * segmentCount;
+      const currentSegment = Math.min(Math.floor(segmentProgress), segmentCount - 1);
+      const segmentFraction = segmentProgress - currentSegment;
+
+      const startPoint = waypoints[currentSegment];
+      const endPoint = waypoints[currentSegment + 1];
+
+      const currentLat = startPoint.lat + (endPoint.lat - startPoint.lat) * segmentFraction;
+      const currentLng = startPoint.lng + (endPoint.lng - startPoint.lng) * segmentFraction;
+
+      // Determine location name based on current segment
+      let locationName = endPoint.name;
+      if (progress < 0.2) locationName = 'East China Sea';
+      else if (progress < 0.4) locationName = 'Philippine Sea';
+      else if (progress < 0.6) locationName = 'Mid-Pacific Ocean';
+      else if (progress < 0.8) locationName = 'North Pacific Ocean';
+      else if (progress < 0.95) locationName = 'Eastern Pacific';
       else if (progress >= 1) locationName = 'Los Angeles Port';
 
-      // Generate timeline
+      // Generate timeline based on waypoints
       const timeline = [];
       const journeyStages = [
         { progress: 0, location: 'Shanghai, China', status: 'Departed' },
-        { progress: 0.15, location: 'East China Sea', status: 'At Sea' },
-        { progress: 0.3, location: 'Philippine Sea', status: 'Transit' },
-        { progress: 0.5, location: 'Mid-Pacific', status: 'At Sea' },
+        { progress: 0.2, location: 'Philippine Sea', status: 'At Sea' },
+        { progress: 0.4, location: 'Mid-Pacific Ocean', status: 'Transit' },
+        { progress: 0.6, location: 'North Pacific', status: 'At Sea' },
         { progress: 0.8, location: 'Eastern Pacific', status: 'Approaching USA' },
         { progress: 1, location: 'Los Angeles, USA', status: matchingPolicy.delivered ? 'Delivered' : 'Expected Arrival' },
       ];
@@ -164,18 +189,18 @@ export default function TrackContainerPage() {
                 'In Transit',
         currentLocation: {
           name: matchingPolicy.delivered ? 'Los Angeles Port' : locationName,
-          lat: matchingPolicy.delivered ? destLat : currentLat,
-          lng: matchingPolicy.delivered ? destLng : currentLng,
+          lat: matchingPolicy.delivered ? waypoints[waypoints.length - 1].lat : currentLat,
+          lng: matchingPolicy.delivered ? waypoints[waypoints.length - 1].lng : currentLng,
         },
         origin: {
-          name: 'Shanghai, China',
-          lat: originLat,
-          lng: originLng,
+          name: waypoints[0].name,
+          lat: waypoints[0].lat,
+          lng: waypoints[0].lng,
         },
         destination: {
-          name: 'Los Angeles, USA',
-          lat: destLat,
-          lng: destLng,
+          name: waypoints[waypoints.length - 1].name,
+          lat: waypoints[waypoints.length - 1].lat,
+          lng: waypoints[waypoints.length - 1].lng,
         },
         expectedArrival: matchingPolicy.expectedArrival.toLocaleDateString(),
         estimatedArrival: matchingPolicy.delayed ?
@@ -286,8 +311,8 @@ export default function TrackContainerPage() {
               </div>
               <div className="h-[400px] relative">
                 <Map
-                  defaultCenter={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
-                  defaultZoom={3}
+                  center={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
+                  zoom={2.5}
                 >
                   {/* Origin Port */}
                   <Marker
@@ -296,39 +321,39 @@ export default function TrackContainerPage() {
                     color="#9ca3af"
                   />
 
-                  {/* Current Location - Ship */}
-                  {!trackingData.delivered && (
-                    <Marker
-                      width={50}
-                      anchor={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
-                    >
-                      <div className="relative">
-                        {/* Ship icon using SVG */}
-                        <svg
-                          width="40"
-                          height="40"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="transform -translate-x-1/2 -translate-y-1/2"
-                        >
-                          <circle cx="12" cy="12" r="11" fill="white" stroke="#111827" strokeWidth="1"/>
-                          {/* Ship icon */}
-                          <path
-                            d="M12 6v7l-5 3v2a1 1 0 001 1h8a1 1 0 001-1v-2l-5-3V6m0 0L9 8m3-2l3 2"
-                            stroke="#111827"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        {/* Pulse animation */}
+                  {/* Current Location - Ship - Always show */}
+                  <Marker
+                    width={50}
+                    anchor={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
+                  >
+                    <div className="relative">
+                      {/* Ship icon using SVG */}
+                      <svg
+                        width="40"
+                        height="40"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="transform -translate-x-1/2 -translate-y-1/2"
+                      >
+                        <circle cx="12" cy="12" r="11" fill="white" stroke="#111827" strokeWidth="1"/>
+                        {/* Ship icon */}
+                        <path
+                          d="M12 6v7l-5 3v2a1 1 0 001 1h8a1 1 0 001-1v-2l-5-3V6m0 0L9 8m3-2l3 2"
+                          stroke="#111827"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      {/* Pulse animation - only if not delivered */}
+                      {!trackingData.delivered && (
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                           <div className="w-10 h-10 bg-gray-900 rounded-full opacity-20 animate-ping"></div>
                         </div>
-                      </div>
-                    </Marker>
-                  )}
+                      )}
+                    </div>
+                  </Marker>
 
                   {/* Destination Port */}
                   <Marker
