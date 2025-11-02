@@ -73,47 +73,48 @@ export default function ClaimInsurancePage() {
           maxPayoutDays: maxDays.toString()
         });
 
-        // Fetch next policy ID to know the range
-        const nextPolicyId = await publicClient.readContract({
+        // Get user's policy IDs using the new function
+        const userPolicyIds = await publicClient.readContract({
           address: INSURANCE_CONTRACT_ADDRESS,
           abi: INSURANCE_CONTRACT_ABI,
-          functionName: 'nextPolicyId',
-        }) as bigint;
+          functionName: 'getPoliciesByUser',
+          args: [address as `0x${string}`],
+        }) as bigint[];
 
         // Fetch all policies for the user
         const policies: Policy[] = [];
-        for (let i = 1; i < Number(nextPolicyId); i++) {
+        for (const policyId of userPolicyIds) {
           try {
             const policy = await publicClient.readContract({
               address: INSURANCE_CONTRACT_ADDRESS,
               abi: INSURANCE_CONTRACT_ABI,
               functionName: 'getPolicy',
-              args: [BigInt(i)],
+              args: [policyId],
             }) as any;
 
-            // Check if this policy belongs to the current user
+            // Verify the policy belongs to this user
             if (policy[0].toLowerCase() === address.toLowerCase()) {
               // Check claimable days
               const claimableDays = await publicClient.readContract({
                 address: INSURANCE_CONTRACT_ADDRESS,
                 abi: INSURANCE_CONTRACT_ABI,
                 functionName: 'claimableDays',
-                args: [BigInt(i)],
+                args: [policyId],
               }) as bigint;
 
               policies.push({
-                policyId: i,
+                policyId: Number(policyId),
                 containerId: policy[1],
                 expectedArrival: new Date(Number(policy[2]) * 1000),
                 active: policy[3],
-                delivered: policy[4],
-                actualArrival: policy[5] > 0 ? new Date(Number(policy[5]) * 1000) : null,
-                claimedDays: Number(policy[6]),
+                delivered: policy[5], // Note: delayed is at index 4, delivered at index 5
+                actualArrival: policy[6] > 0 ? new Date(Number(policy[6]) * 1000) : null,
+                claimedDays: Number(policy[7]),
                 claimableDays: Number(claimableDays),
               });
             }
           } catch (error) {
-            console.error(`Error fetching policy ${i}:`, error);
+            console.error(`Error fetching policy ${policyId}:`, error);
           }
         }
 

@@ -78,21 +78,6 @@ export const INSURANCE_CONTRACT_ABI = [
         "internalType": "address",
         "name": "_token",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_premiumAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_payoutPerDay",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxPayoutDays",
-        "type": "uint256"
       }
     ],
     "stateMutability": "nonpayable",
@@ -116,6 +101,43 @@ export const INSURANCE_CONTRACT_ABI = [
     ],
     "name": "AdminChanged",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "containerId",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expectedArrival",
+        "type": "uint256"
+      }
+    ],
+    "name": "buyPolicy",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      }
+    ],
+    "name": "claim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "anonymous": false,
@@ -160,6 +182,25 @@ export const INSURANCE_CONTRACT_ABI = [
       {
         "indexed": false,
         "internalType": "bool",
+        "name": "delayed",
+        "type": "bool"
+      }
+    ],
+    "name": "DelayStatusSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
         "name": "delivered",
         "type": "bool"
       },
@@ -172,6 +213,19 @@ export const INSURANCE_CONTRACT_ABI = [
     ],
     "name": "DeliveryUpdated",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "depositTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "anonymous": false,
@@ -224,6 +278,83 @@ export const INSURANCE_CONTRACT_ABI = [
     "type": "event"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "setAdmin",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_delayed",
+        "type": "bool"
+      }
+    ],
+    "name": "setDelayedStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "policyId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_delivered",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_actualArrival",
+        "type": "uint256"
+      }
+    ],
+    "name": "setDeliveryStatus",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_premiumAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_payoutPerDay",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxPayoutDays",
+        "type": "uint256"
+      }
+    ],
+    "name": "setPricing",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -262,6 +393,24 @@ export const INSURANCE_CONTRACT_ABI = [
     "type": "event"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "withdrawTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "admin",
     "outputs": [
@@ -272,43 +421,6 @@ export const INSURANCE_CONTRACT_ABI = [
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "containerId",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expectedArrival",
-        "type": "uint256"
-      }
-    ],
-    "name": "buyPolicy",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "policyId",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "policyId",
-        "type": "uint256"
-      }
-    ],
-    "name": "claim",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -333,14 +445,20 @@ export const INSURANCE_CONTRACT_ABI = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
       }
     ],
-    "name": "depositTokens",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "getPoliciesByUser",
+    "outputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -375,6 +493,11 @@ export const INSURANCE_CONTRACT_ABI = [
       },
       {
         "internalType": "bool",
+        "name": "delayed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
         "name": "delivered",
         "type": "bool"
       },
@@ -386,6 +509,25 @@ export const INSURANCE_CONTRACT_ABI = [
       {
         "internalType": "uint256",
         "name": "claimedDays",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserPolicyCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -445,65 +587,6 @@ export const INSURANCE_CONTRACT_ABI = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newAdmin",
-        "type": "address"
-      }
-    ],
-    "name": "setAdmin",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "policyId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "_delivered",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_actualArrival",
-        "type": "uint256"
-      }
-    ],
-    "name": "setDeliveryStatus",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_premiumAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_payoutPerDay",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_maxPayoutDays",
-        "type": "uint256"
-      }
-    ],
-    "name": "setPricing",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "token",
     "outputs": [
@@ -514,24 +597,6 @@ export const INSURANCE_CONTRACT_ABI = [
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "withdrawTokens",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   }
 ] as const;
