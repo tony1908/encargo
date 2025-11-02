@@ -1,12 +1,128 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
+import { useAccount, usePublicClient } from 'wagmi';
 import { ShoppingCartIcon, MapIcon, ClockIcon, BanknotesIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
+import { INSURANCE_CONTRACT_ADDRESS, INSURANCE_CONTRACT_ABI } from '@/contracts/InsuranceContract';
+import { arbitrumSepolia } from 'viem/chains';
+import { formatEther } from 'viem';
 
 export default function DashboardPage() {
   const { user } = usePrivy();
   const router = useRouter();
+  const { address } = useAccount();
+  const publicClient = usePublicClient({ chainId: arbitrumSepolia.id });
+
+  const [stats, setStats] = useState({
+    totalPolicies: 0,
+    activePolicies: 0,
+    claimablePolicies: 0,
+    totalCoverage: '0',
+  });
+
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+
+  // Fetch user data from contract
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!publicClient || !address) return;
+
+      try {
+        // Get user's policy count
+        const policyCount = await publicClient.readContract({
+          address: INSURANCE_CONTRACT_ADDRESS,
+          abi: INSURANCE_CONTRACT_ABI,
+          functionName: 'getUserPolicyCount',
+          args: [address as `0x${string}`],
+        }) as bigint;
+
+        // Get user's policy IDs
+        const policyIds = await publicClient.readContract({
+          address: INSURANCE_CONTRACT_ADDRESS,
+          abi: INSURANCE_CONTRACT_ABI,
+          functionName: 'getPoliciesByUser',
+          args: [address as `0x${string}`],
+        }) as bigint[];
+
+        let activePolicies = 0;
+        let claimablePolicies = 0;
+        let totalCoverage = 0n;
+        const activities: any[] = [];
+
+        // Get contract pricing for coverage calculation
+        const [premiumAmount, payoutPerDay, maxDays] = await Promise.all([
+          publicClient.readContract({
+            address: INSURANCE_CONTRACT_ADDRESS,
+            abi: INSURANCE_CONTRACT_ABI,
+            functionName: 'premiumAmount',
+          }) as Promise<bigint>,
+          publicClient.readContract({
+            address: INSURANCE_CONTRACT_ADDRESS,
+            abi: INSURANCE_CONTRACT_ABI,
+            functionName: 'payoutPerDay',
+          }) as Promise<bigint>,
+          publicClient.readContract({
+            address: INSURANCE_CONTRACT_ADDRESS,
+            abi: INSURANCE_CONTRACT_ABI,
+            functionName: 'maxPayoutDays',
+          }) as Promise<bigint>,
+        ]);
+
+        // Fetch details for each policy
+        for (const policyId of policyIds.slice(-3)) { // Get last 3 policies for recent activity
+          const policy = await publicClient.readContract({
+            address: INSURANCE_CONTRACT_ADDRESS,
+            abi: INSURANCE_CONTRACT_ABI,
+            functionName: 'getPolicy',
+            args: [policyId],
+          }) as any;
+
+          const claimableDays = await publicClient.readContract({
+            address: INSURANCE_CONTRACT_ADDRESS,
+            abi: INSURANCE_CONTRACT_ABI,
+            functionName: 'claimableDays',
+            args: [policyId],
+          }) as bigint;
+
+          if (policy[3]) { // active
+            activePolicies++;
+          }
+
+          if (claimableDays > 0n) {
+            claimablePolicies++;
+          }
+
+          // Calculate total potential coverage
+          totalCoverage += payoutPerDay * maxDays;
+
+          // Add to recent activity
+          activities.push({
+            policyId: Number(policyId),
+            containerId: policy[1],
+            active: policy[3],
+            delivered: policy[5],
+            claimableDays: Number(claimableDays),
+            expectedArrival: new Date(Number(policy[2]) * 1000),
+          });
+        }
+
+        setStats({
+          totalPolicies: Number(policyCount),
+          activePolicies,
+          claimablePolicies,
+          totalCoverage: formatEther(totalCoverage),
+        });
+
+        setRecentActivity(activities);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, [publicClient, address]);
 
   const quickActions = [
     {
@@ -35,12 +151,6 @@ export default function DashboardPage() {
     },
   ];
 
-  const stats = [
-    { label: 'Policies', value: '3', trend: '+2' },
-    { label: 'Coverage', value: '$250K', trend: null },
-    { label: 'Pending', value: '1', trend: '-1' },
-    { label: 'Tracked', value: '5', trend: '+3' },
-  ];
 
   return (
     <div className="p-8">
@@ -54,19 +164,32 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        {stats.map((stat) => (
-          <div key={stat.label} className="bg-white p-4 rounded-lg border border-gray-100">
-            <div className="flex items-baseline gap-2">
-              <div className="text-xl font-medium text-gray-900">{stat.value}</div>
-              {stat.trend && (
-                <span className={`text-xs ${stat.trend.startsWith('+') ? 'text-gray-900' : 'text-gray-500'}`}>
-                  {stat.trend}
-                </span>
-              )}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
+          <div className="flex items-baseline gap-2">
+            <div className="text-xl font-medium text-gray-900">{stats.totalPolicies}</div>
           </div>
-        ))}
+          <div className="text-xs text-gray-500 mt-1">Total Policies</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
+          <div className="flex items-baseline gap-2">
+            <div className="text-xl font-medium text-gray-900">{stats.activePolicies}</div>
+          </div>
+          <div className="text-xs text-gray-500 mt-1">Active</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
+          <div className="flex items-baseline gap-2">
+            <div className="text-xl font-medium text-gray-900">{stats.claimablePolicies}</div>
+          </div>
+          <div className="text-xs text-gray-500 mt-1">Claimable</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
+          <div className="flex items-baseline gap-2">
+            <div className="text-xl font-medium text-gray-900">
+              {parseFloat(stats.totalCoverage).toFixed(2)} ETH
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 mt-1">Max Coverage</div>
+        </div>
       </div>
 
       {/* Quick Actions */}
@@ -89,29 +212,27 @@ export default function DashboardPage() {
 
       {/* Activity Feed */}
       <div className="bg-white rounded-lg border border-gray-100 p-6">
-        <h2 className="text-sm font-medium text-gray-900 mb-4">Activity</h2>
+        <h2 className="text-sm font-medium text-gray-900 mb-4">Recent Policies</h2>
         <div className="space-y-4">
-          <div className="flex gap-3">
-            <div className="w-1 bg-gray-900 rounded-full flex-shrink-0"></div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-900">Policy activated</p>
-              <p className="text-xs text-gray-500 mt-0.5">MSCU123456 • $50,000 • 2h ago</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <div className="w-1 bg-gray-400 rounded-full flex-shrink-0"></div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-900">Location update</p>
-              <p className="text-xs text-gray-500 mt-0.5">HLCU987654 • Singapore • 5h ago</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <div className="w-1 bg-gray-400 rounded-full flex-shrink-0"></div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-900">Claim approved</p>
-              <p className="text-xs text-gray-500 mt-0.5">TCLU456789 • $2,500 • 1d ago</p>
-            </div>
-          </div>
+          {recentActivity.length > 0 ? (
+            recentActivity.map((activity) => (
+              <div key={activity.policyId} className="flex gap-3">
+                <div className={`w-1 ${activity.active ? 'bg-gray-900' : 'bg-gray-400'} rounded-full flex-shrink-0`}></div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-900">
+                    Policy #{activity.policyId} {activity.active ? 'Active' : activity.delivered ? 'Delivered' : 'Pending'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {activity.containerId} •
+                    {activity.claimableDays > 0 ? ` ${activity.claimableDays} days claimable • ` : ' '}
+                    Expected: {activity.expectedArrival.toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-sm text-gray-500">No policies found. Buy your first policy to get started!</div>
+          )}
         </div>
       </div>
     </div>

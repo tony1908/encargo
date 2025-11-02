@@ -1,66 +1,199 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Map, Marker } from 'pigeon-maps';
 import { MagnifyingGlassIcon, MapPinIcon, TruckIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { useAccount, usePublicClient } from 'wagmi';
+import { INSURANCE_CONTRACT_ADDRESS, INSURANCE_CONTRACT_ABI } from '@/contracts/InsuranceContract';
+import { arbitrumSepolia } from 'viem/chains';
+
+interface PolicyTrackingData {
+  policyId: number;
+  containerNumber: string;
+  status: string;
+  currentLocation: {
+    name: string;
+    lat: number;
+    lng: number;
+  };
+  origin: {
+    name: string;
+    lat: number;
+    lng: number;
+  };
+  destination: {
+    name: string;
+    lat: number;
+    lng: number;
+  };
+  expectedArrival: string;
+  estimatedArrival: string;
+  active: boolean;
+  delayed: boolean;
+  delivered: boolean;
+  timeline: any[];
+}
 
 export default function TrackContainerPage() {
+  const { address } = useAccount();
+  const publicClient = usePublicClient({ chainId: arbitrumSepolia.id });
   const [containerNumber, setContainerNumber] = useState('');
-  const [trackingData, setTrackingData] = useState<any>(null);
+  const [trackingData, setTrackingData] = useState<PolicyTrackingData | null>(null);
+  const [availablePolicies, setAvailablePolicies] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Mock tracking data - positioned in Pacific Ocean
-  const mockTrackingData = {
-    containerNumber: 'MSCU1234567',
-    status: 'In Transit',
-    currentLocation: {
-      name: 'Pacific Ocean - 850nm from LA',
-      lat: 25.5, // Positioned in the Pacific Ocean
-      lng: -140.0, // Between Asia and USA
-    },
-    origin: {
-      name: 'Shanghai, China',
-      lat: 31.2304,
-      lng: 121.4737,
-    },
-    destination: {
-      name: 'Los Angeles, USA',
-      lat: 33.7701,
-      lng: -118.1937,
-    },
-    expectedArrival: '2024-12-15',
-    estimatedArrival: '2024-12-15',
-    timeline: [
-      {
-        location: 'Shanghai, China',
-        date: '2024-11-20',
-        status: 'Departed',
-        completed: true,
-      },
-      {
-        location: 'Port of Singapore',
-        date: '2024-11-28',
-        status: 'Transit Stop',
-        completed: true,
-      },
-      {
-        location: 'Pacific Ocean',
-        date: '2024-12-01',
-        status: 'Currently at Sea',
-        completed: false,
-        current: true,
-      },
-      {
-        location: 'Los Angeles, USA',
-        date: '2024-12-15',
-        status: 'Expected Arrival',
-        completed: false,
-      },
-    ],
-  };
+  // Fetch user's policies on mount
+  useEffect(() => {
+    const fetchUserPolicies = async () => {
+      if (!publicClient || !address) return;
 
-  const handleTrack = (e: React.FormEvent) => {
+      try {
+        const policyIds = await publicClient.readContract({
+          address: INSURANCE_CONTRACT_ADDRESS,
+          abi: INSURANCE_CONTRACT_ABI,
+          functionName: 'getPoliciesByUser',
+          args: [address as `0x${string}`],
+        }) as bigint[];
+
+        const policies = [];
+        for (const policyId of policyIds) {
+          const policy = await publicClient.readContract({
+            address: INSURANCE_CONTRACT_ADDRESS,
+            abi: INSURANCE_CONTRACT_ABI,
+            functionName: 'getPolicy',
+            args: [policyId],
+          }) as any;
+
+          if (policy[3]) { // Only active policies
+            policies.push({
+              policyId: Number(policyId),
+              containerNumber: policy[1],
+              expectedArrival: new Date(Number(policy[2]) * 1000),
+              active: policy[3],
+              delayed: policy[4],
+              delivered: policy[5],
+            });
+          }
+        }
+
+        setAvailablePolicies(policies);
+      } catch (error) {
+        console.error('Error fetching policies:', error);
+      }
+    };
+
+    fetchUserPolicies();
+  }, [publicClient, address]);
+
+  const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTrackingData(mockTrackingData);
+    setLoading(true);
+    setError('');
+
+    try {
+      // Find matching policy from user's policies
+      const matchingPolicy = availablePolicies.find(
+        p => p.containerNumber.toLowerCase() === containerNumber.toLowerCase()
+      );
+
+      if (!matchingPolicy) {
+        setError('Container not found. Please check the container number or ensure you have an active policy.');
+        setTrackingData(null);
+        setLoading(false);
+        return;
+      }
+
+      // Calculate current position based on time elapsed
+      const now = Date.now();
+      const startDate = new Date(matchingPolicy.expectedArrival.getTime() - 25 * 24 * 60 * 60 * 1000); // 25 days before arrival
+      const totalJourney = matchingPolicy.expectedArrival.getTime() - startDate.getTime();
+      const elapsed = now - startDate.getTime();
+      const progress = Math.min(Math.max(elapsed / totalJourney, 0), 1);
+
+      // Simulate positions from Shanghai to LA
+      const originLat = 31.2304;
+      const originLng = 121.4737;
+      const destLat = 33.7701;
+      const destLng = -118.1937;
+
+      // Calculate current position (simplified linear interpolation)
+      // In reality, ships follow specific shipping lanes
+      const currentLat = originLat + (destLat - originLat) * progress;
+      const currentLng = originLng + (destLng - originLng) * progress;
+
+      // Determine location name based on progress
+      let locationName = 'Pacific Ocean';
+      if (progress < 0.15) locationName = 'East China Sea';
+      else if (progress < 0.3) locationName = 'Philippine Sea';
+      else if (progress < 0.8) locationName = 'Pacific Ocean';
+      else if (progress < 0.95) locationName = 'Near California Coast';
+      else if (progress >= 1) locationName = 'Los Angeles Port';
+
+      // Generate timeline
+      const timeline = [];
+      const journeyStages = [
+        { progress: 0, location: 'Shanghai, China', status: 'Departed' },
+        { progress: 0.15, location: 'East China Sea', status: 'At Sea' },
+        { progress: 0.3, location: 'Philippine Sea', status: 'Transit' },
+        { progress: 0.5, location: 'Mid-Pacific', status: 'At Sea' },
+        { progress: 0.8, location: 'Eastern Pacific', status: 'Approaching USA' },
+        { progress: 1, location: 'Los Angeles, USA', status: matchingPolicy.delivered ? 'Delivered' : 'Expected Arrival' },
+      ];
+
+      journeyStages.forEach((stage, index) => {
+        const stageTime = startDate.getTime() + (totalJourney * stage.progress);
+        const isCompleted = progress >= stage.progress;
+        const isCurrent = index === journeyStages.findIndex(s => s.progress > progress) - 1 ||
+                         (progress >= 1 && index === journeyStages.length - 1);
+
+        timeline.push({
+          location: stage.location,
+          date: new Date(stageTime).toLocaleDateString(),
+          status: stage.status,
+          completed: isCompleted,
+          current: isCurrent && !matchingPolicy.delivered,
+        });
+      });
+
+      const trackingInfo: PolicyTrackingData = {
+        policyId: matchingPolicy.policyId,
+        containerNumber: matchingPolicy.containerNumber,
+        status: matchingPolicy.delivered ? 'Delivered' :
+                matchingPolicy.delayed ? 'Delayed' :
+                'In Transit',
+        currentLocation: {
+          name: matchingPolicy.delivered ? 'Los Angeles Port' : locationName,
+          lat: matchingPolicy.delivered ? destLat : currentLat,
+          lng: matchingPolicy.delivered ? destLng : currentLng,
+        },
+        origin: {
+          name: 'Shanghai, China',
+          lat: originLat,
+          lng: originLng,
+        },
+        destination: {
+          name: 'Los Angeles, USA',
+          lat: destLat,
+          lng: destLng,
+        },
+        expectedArrival: matchingPolicy.expectedArrival.toLocaleDateString(),
+        estimatedArrival: matchingPolicy.delayed ?
+          new Date(matchingPolicy.expectedArrival.getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString() :
+          matchingPolicy.expectedArrival.toLocaleDateString(),
+        active: matchingPolicy.active,
+        delayed: matchingPolicy.delayed,
+        delivered: matchingPolicy.delivered,
+        timeline,
+      };
+
+      setTrackingData(trackingInfo);
+    } catch (error) {
+      console.error('Error tracking container:', error);
+      setError('Error fetching tracking information. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,15 +217,43 @@ export default function TrackContainerPage() {
               placeholder="Enter container number (e.g., MSCU1234567)"
               className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:border-gray-900 outline-none transition text-sm"
               required
+              disabled={loading}
             />
           </div>
           <button
             type="submit"
-            className="px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+            disabled={loading || !address}
+            className="px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:bg-gray-400"
           >
-            Track
+            {loading ? 'Tracking...' : 'Track'}
           </button>
         </form>
+
+        {/* Quick select from active policies */}
+        {availablePolicies.length > 0 && (
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-gray-500">Quick select:</span>
+            {availablePolicies.map((policy) => (
+              <button
+                key={policy.policyId}
+                onClick={() => setContainerNumber(policy.containerNumber)}
+                className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+              >
+                {policy.containerNumber}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-3 text-sm text-red-600">{error}</div>
+        )}
+
+        {!address && (
+          <div className="mt-3 text-sm text-gray-500">
+            Please connect your wallet to track containers
+          </div>
+        )}
       </div>
 
       {trackingData && (
@@ -104,8 +265,22 @@ export default function TrackContainerPage() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-medium text-gray-900">Location</h2>
                   <div className="flex items-center gap-2 text-xs">
-                    <div className="w-1.5 h-1.5 bg-gray-900 rounded-full animate-pulse"></div>
-                    <span className="text-gray-600">Live</span>
+                    {!trackingData.delivered && (
+                      <>
+                        <div className="w-1.5 h-1.5 bg-gray-900 rounded-full animate-pulse"></div>
+                        <span className="text-gray-600">Live</span>
+                      </>
+                    )}
+                    {trackingData.delayed && (
+                      <span className="px-2 py-0.5 bg-gray-900 text-white text-xs font-medium rounded">
+                        Delayed
+                      </span>
+                    )}
+                    {trackingData.delivered && (
+                      <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded">
+                        Delivered
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -122,192 +297,138 @@ export default function TrackContainerPage() {
                   />
 
                   {/* Current Location - Ship */}
-                  <Marker
-                    width={50}
-                    anchor={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
-                  >
-                    <div className="relative">
-                      {/* Ship icon using SVG */}
-                      <svg
-                        width="40"
-                        height="40"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="transform -translate-x-1/2 -translate-y-1/2"
-                      >
-                        <circle cx="12" cy="12" r="11" fill="white" stroke="#111827" strokeWidth="1"/>
-                        {/* Ship icon */}
-                        <path
-                          d="M12 6v7l-5 3v2a1 1 0 001 1h8a1 1 0 001-1v-2l-5-3V6m0 0L9 8m3-2l3 2"
-                          stroke="#111827"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      {/* Pulse animation */}
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-10 h-10 bg-gray-900 rounded-full opacity-20 animate-ping"></div>
+                  {!trackingData.delivered && (
+                    <Marker
+                      width={50}
+                      anchor={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
+                    >
+                      <div className="relative">
+                        {/* Ship icon using SVG */}
+                        <svg
+                          width="40"
+                          height="40"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="transform -translate-x-1/2 -translate-y-1/2"
+                        >
+                          <circle cx="12" cy="12" r="11" fill="white" stroke="#111827" strokeWidth="1"/>
+                          {/* Ship icon */}
+                          <path
+                            d="M12 6v7l-5 3v2a1 1 0 001 1h8a1 1 0 001-1v-2l-5-3V6m0 0L9 8m3-2l3 2"
+                            stroke="#111827"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        {/* Pulse animation */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                          <div className="w-10 h-10 bg-gray-900 rounded-full opacity-20 animate-ping"></div>
+                        </div>
                       </div>
-                    </div>
-                  </Marker>
+                    </Marker>
+                  )}
 
                   {/* Destination Port */}
                   <Marker
                     width={30}
                     anchor={[trackingData.destination.lat, trackingData.destination.lng]}
-                    color="#d1d5db"
+                    color={trackingData.delivered ? "#111827" : "#9ca3af"}
                   />
                 </Map>
-              </div>
-              <div className="p-3 bg-gray-50 border-t border-gray-100">
-                <div className="flex items-center gap-4 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
-                    <span className="text-gray-600">Origin</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-gray-900">
-                      <path d="M12 6v7l-5 3v2a1 1 0 001 1h8a1 1 0 001-1v-2l-5-3V6" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                    <span className="text-gray-600">Ship (Current)</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 bg-gray-300 rounded-full"></div>
-                    <span className="text-gray-600">Destination</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Timeline */}
-            <div className="bg-white rounded-lg border border-gray-100 p-6">
-              <h2 className="text-sm font-medium text-gray-900 mb-4">Timeline</h2>
-              <div className="space-y-4">
-                {trackingData.timeline.map((event: any, index: number) => (
-                  <div key={index} className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          event.completed
-                            ? 'bg-gray-900'
-                            : event.current
-                            ? 'bg-gray-900'
-                            : 'bg-gray-200'
-                        }`}
-                      >
-                        {event.completed ? (
-                          <CheckCircleIcon className="w-4 h-4 text-white" />
-                        ) : event.current ? (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white">
-                            <path d="M12 6v7l-5 3v2a1 1 0 001 1h8a1 1 0 001-1v-2l-5-3V6" stroke="currentColor" strokeWidth="2"/>
-                          </svg>
-                        ) : (
-                          <MapPinIcon className="w-4 h-4 text-gray-500" />
-                        )}
-                      </div>
-                      {index < trackingData.timeline.length - 1 && (
-                        <div
-                          className={`w-0.5 h-10 ${
-                            event.completed ? 'bg-gray-900' : 'bg-gray-200'
-                          }`}
-                        ></div>
-                      )}
-                    </div>
-                    <div className="flex-1 pb-4">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <h3 className="text-sm font-medium text-gray-900">{event.location}</h3>
-                        <span className="text-xs text-gray-500">{event.date}</span>
-                      </div>
-                      <p className={`text-xs ${
-                        event.completed
-                          ? 'text-gray-600'
-                          : event.current
-                          ? 'text-gray-900 font-medium'
-                          : 'text-gray-500'
-                      }`}>
-                        {event.status}
-                      </p>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
 
           {/* Info Panel */}
           <div className="space-y-4">
-            {/* Container Info */}
+            {/* Container Details */}
             <div className="bg-white rounded-lg border border-gray-100 p-4">
-              <h2 className="text-sm font-medium text-gray-900 mb-3">Container</h2>
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Container Details</h3>
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs text-gray-500">Number</p>
-                  <p className="font-mono text-sm text-gray-900 mt-0.5">
-                    {trackingData.containerNumber}
-                  </p>
+                  <p className="text-xs text-gray-500">Container Number</p>
+                  <p className="text-sm font-mono font-medium text-gray-900">{trackingData.containerNumber}</p>
                 </div>
-                <div className="pt-2 border-t border-gray-50">
+                <div>
+                  <p className="text-xs text-gray-500">Policy ID</p>
+                  <p className="text-sm font-medium text-gray-900">#{trackingData.policyId}</p>
+                </div>
+                <div>
                   <p className="text-xs text-gray-500">Status</p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <div className="w-1.5 h-1.5 bg-gray-900 rounded-full"></div>
-                    <p className="text-sm text-gray-900">{trackingData.status}</p>
+                  <p className="text-sm font-medium text-gray-900">{trackingData.status}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Current Location</p>
+                  <p className="text-sm font-medium text-gray-900">{trackingData.currentLocation.name}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Origin</p>
+                    <p className="text-sm font-medium text-gray-900">{trackingData.origin.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Destination</p>
+                    <p className="text-sm font-medium text-gray-900">{trackingData.destination.name}</p>
                   </div>
                 </div>
-                <div className="pt-2 border-t border-gray-50">
-                  <p className="text-xs text-gray-500">Location</p>
-                  <p className="text-sm text-gray-900 mt-0.5">
-                    {trackingData.currentLocation.name}
-                  </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Expected</p>
+                    <p className="text-sm font-medium text-gray-900">{trackingData.expectedArrival}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Estimated</p>
+                    <p className={`text-sm font-medium ${
+                      trackingData.delayed ? 'text-gray-900' : 'text-gray-900'
+                    }`}>
+                      {trackingData.estimatedArrival}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Delivery Info */}
+            {/* Timeline */}
             <div className="bg-white rounded-lg border border-gray-100 p-4">
-              <h2 className="text-sm font-medium text-gray-900 mb-3">Delivery</h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs text-gray-500">Origin</p>
-                  <p className="text-sm text-gray-900 mt-0.5">{trackingData.origin.name}</p>
-                </div>
-                <div className="pt-2 border-t border-gray-50">
-                  <p className="text-xs text-gray-500">Destination</p>
-                  <p className="text-sm text-gray-900 mt-0.5">{trackingData.destination.name}</p>
-                </div>
-                <div className="pt-2 border-t border-gray-50">
-                  <p className="text-xs text-gray-500">Expected</p>
-                  <p className="text-sm text-gray-900 mt-0.5">{trackingData.expectedArrival}</p>
-                </div>
-                <div className="pt-2 border-t border-gray-50">
-                  <p className="text-xs text-gray-500">Estimated</p>
-                  <p className="text-sm text-gray-900 mt-0.5">{trackingData.estimatedArrival}</p>
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Journey Timeline</h3>
+              <div className="relative">
+                <div className="absolute left-2 top-3 bottom-3 w-0.5 bg-gray-200"></div>
+                <div className="space-y-3">
+                  {trackingData.timeline.map((event, index) => (
+                    <div key={index} className="flex gap-3">
+                      <div className="relative z-10">
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 ${
+                            event.completed
+                              ? 'bg-gray-900 border-gray-900'
+                              : event.current
+                              ? 'bg-white border-gray-900'
+                              : 'bg-white border-gray-300'
+                          }`}
+                        >
+                          {event.current && (
+                            <div className="absolute inset-0 rounded-full bg-gray-900 animate-ping"></div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-1 -mt-0.5">
+                        <p className={`text-sm ${
+                          event.completed || event.current ? 'text-gray-900' : 'text-gray-500'
+                        }`}>
+                          {event.location}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {event.date} • {event.status}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-
-            {/* Status */}
-            <div className="bg-gray-900 text-white rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircleIcon className="w-4 h-4" />
-                <h3 className="text-sm font-medium">On Schedule</h3>
-              </div>
-              <p className="text-xs text-gray-300">
-                Container tracking on time for delivery
-              </p>
             </div>
           </div>
-        </div>
-      )}
-
-      {!trackingData && (
-        <div className="bg-white rounded-lg border border-gray-100 p-12 text-center">
-          <MapPinIcon className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-sm font-medium text-gray-900 mb-1">Track Your Container</h3>
-          <p className="text-xs text-gray-500">
-            Enter tracking number to view real-time location
-          </p>
         </div>
       )}
     </div>

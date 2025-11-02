@@ -33,6 +33,7 @@ export default function BuyInsurancePage() {
   const [txHash, setTxHash] = useState('');
   const [approvalTxHash, setApprovalTxHash] = useState('');
   const [isApproved, setIsApproved] = useState(false);
+  const [purchaseComplete, setPurchaseComplete] = useState(false);
   const [contractPricing, setContractPricing] = useState({
     premiumAmount: '0',
     payoutPerDay: '0',
@@ -235,6 +236,23 @@ export default function BuyInsurancePage() {
     }
   };
 
+  const handleBuyAnother = () => {
+    // Reset all state for a new purchase
+    setFormData({
+      containerNumber: '',
+      merchandiseValue: '',
+      expectedArrivalDate: '',
+      origin: '',
+      destination: '',
+    });
+    setShowQuote(false);
+    setAcceptTerms(false);
+    setIsApproved(false);
+    setApprovalTxHash('');
+    setTxHash('');
+    setPurchaseComplete(false);
+  };
+
   const handlePurchase = async () => {
     console.log('Starting insurance purchase process...');
 
@@ -313,18 +331,8 @@ export default function BuyInsurancePage() {
 
       if (receipt.status === 'success') {
         alert(`Insurance policy confirmed! Your policy is now active.`);
-        // Reset form
-        setFormData({
-          containerNumber: '',
-          merchandiseValue: '',
-          expectedArrivalDate: '',
-          origin: '',
-          destination: '',
-        });
-        setShowQuote(false);
-        setAcceptTerms(false);
-        setIsApproved(false);
-        setApprovalTxHash('');
+        // Mark purchase as complete
+        setPurchaseComplete(true);
       }
     } catch (error: any) {
       console.error('Error purchasing policy:', error);
@@ -525,7 +533,30 @@ export default function BuyInsurancePage() {
 
               {/* Two-step purchase process */}
               <div className="space-y-3">
-                {!isApproved ? (
+                {purchaseComplete ? (
+                  <>
+                    {/* Success State */}
+                    <div className="p-4 bg-gray-900 text-white rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <p className="font-medium">Purchase Successful!</p>
+                      </div>
+                      <p className="text-xs text-gray-200">
+                        Your insurance policy is now active. You can track your container and file claims if needed.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleBuyAnother}
+                      className="w-full py-2.5 rounded-lg text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition"
+                    >
+                      Buy Another Policy
+                    </button>
+                  </>
+                ) : !isApproved ? (
                   <>
                     <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600">
                       <p className="font-medium text-gray-900 mb-1">Step 1: Approve Tokens</p>
