@@ -1,5 +1,34 @@
-export const INSURANCE_CONTRACT_ADDRESS = '0xDE5d818E49F12E1feB107F320276D84Cb544b767';
-export const TOKEN_ADDRESS = '0x8420eEC4b6C5Df04D3bf8eA282aD2C8bE35858Cd';
+import { arbitrumSepolia, scrollSepolia } from 'viem/chains';
+
+// Network configurations
+export const NETWORK_CONFIG = {
+  [arbitrumSepolia.id]: {
+    name: 'Arbitrum Sepolia',
+    insuranceContract: '0xDE5d818E49F12E1feB107F320276D84Cb544b767',
+    tokenContract: '0x8420eEC4b6C5Df04D3bf8eA282aD2C8bE35858Cd',
+    explorer: 'https://sepolia.arbiscan.io',
+  },
+  [scrollSepolia.id]: {
+    name: 'Scroll Sepolia',
+    insuranceContract: '0xDE5d818E49F12E1feB107F320276D84Cb544b767', // Update with actual Scroll address
+    tokenContract: '0x8420eEC4b6C5Df04D3bf8eA282aD2C8bE35858Cd', // Update with actual Scroll token address
+    explorer: 'https://sepolia.scrollscan.com',
+  },
+} as const;
+
+// Helper function to get contract addresses for a specific chain
+export function getContractAddresses(chainId: number) {
+  const config = NETWORK_CONFIG[chainId as keyof typeof NETWORK_CONFIG];
+  if (!config) {
+    // Default to Arbitrum Sepolia
+    return NETWORK_CONFIG[arbitrumSepolia.id];
+  }
+  return config;
+}
+
+// Legacy exports for backward compatibility (defaults to Arbitrum Sepolia)
+export const INSURANCE_CONTRACT_ADDRESS = NETWORK_CONFIG[arbitrumSepolia.id].insuranceContract;
+export const TOKEN_ADDRESS = NETWORK_CONFIG[arbitrumSepolia.id].tokenContract;
 
 export const ERC20_ABI = [
   {

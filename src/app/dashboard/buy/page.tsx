@@ -2,19 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
-import { useWalletClient, usePublicClient, useAccount } from 'wagmi';
+import { useWalletClient, usePublicClient, useAccount, useChainId } from 'wagmi';
 import { useSetActiveWallet } from '@privy-io/wagmi';
 import { parseEther, formatEther } from 'viem';
-import { INSURANCE_CONTRACT_ADDRESS, INSURANCE_CONTRACT_ABI, TOKEN_ADDRESS, ERC20_ABI } from '@/contracts/InsuranceContract';
-import { arbitrumSepolia } from 'viem/chains';
+import { INSURANCE_CONTRACT_ABI, ERC20_ABI } from '@/contracts/InsuranceContract';
+import { useContractAddresses } from '@/hooks/useContractAddresses';
 
 export default function BuyInsurancePage() {
   const { user, authenticated } = usePrivy();
   const { wallets } = useWallets();
   const { setActiveWallet } = useSetActiveWallet();
   const { address } = useAccount();
-  const { data: walletClient } = useWalletClient({ chainId: arbitrumSepolia.id });
-  const publicClient = usePublicClient({ chainId: arbitrumSepolia.id });
+  const chainId = useChainId();
+  const { data: walletClient } = useWalletClient({ chainId });
+  const publicClient = usePublicClient({ chainId });
+
+  // Get contract addresses for current network
+  const { insuranceContract: INSURANCE_CONTRACT_ADDRESS, tokenContract: TOKEN_ADDRESS, explorer, networkName } = useContractAddresses();
 
   // Get the active wallet from Privy
   const wallet = wallets[0];
@@ -156,8 +160,8 @@ export default function BuyInsurancePage() {
     setIsLoading(true);
     try {
       // Switch to the correct chain if needed
-      console.log('Switching to Arbitrum Sepolia...');
-      await wallet.switchChain(arbitrumSepolia.id);
+      console.log(`Switching to ${networkName}...`);
+      await wallet.switchChain(chainId);
 
       // Calculate premium amount in wei (assuming token has 18 decimals like ETH)
       const premiumInWei = parseEther(calculatePremium());
@@ -279,8 +283,8 @@ export default function BuyInsurancePage() {
     setIsLoading(true);
     try {
       // Switch to the correct chain if needed
-      console.log('Switching to Arbitrum Sepolia...');
-      await wallet.switchChain(arbitrumSepolia.id);
+      console.log(`Switching to ${networkName}...`);
+      await wallet.switchChain(chainId);
 
       // Convert date to Unix timestamp
       const expectedArrival = Math.floor(new Date(formData.expectedArrivalDate).getTime() / 1000);
@@ -507,7 +511,7 @@ export default function BuyInsurancePage() {
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <p className="text-xs text-gray-600">Approval Transaction:</p>
                   <a
-                    href={`https://sepolia.arbiscan.io/tx/${approvalTxHash}`}
+                    href={`{explorer}/tx/${approvalTxHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs font-mono text-gray-900 hover:underline break-all"
@@ -521,7 +525,7 @@ export default function BuyInsurancePage() {
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <p className="text-xs text-gray-600">Purchase Transaction:</p>
                   <a
-                    href={`https://sepolia.arbiscan.io/tx/${txHash}`}
+                    href={`{explorer}/tx/${txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs font-mono text-gray-900 hover:underline break-all"

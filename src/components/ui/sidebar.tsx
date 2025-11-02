@@ -14,6 +14,7 @@ import {
   QuestionMarkCircleIcon,
   ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
+import { NetworkSwitcher } from '@/components/NetworkSwitcher';
 
 interface SidebarProps {
   isExpanded: boolean;
@@ -136,8 +137,15 @@ export function Sidebar({ isExpanded, onToggle }: SidebarProps) {
         })}
       </nav>
 
-      {/* Bottom Section - Help and Logout */}
+      {/* Bottom Section - Network, Help and Logout */}
       <div className="absolute bottom-4 left-2 right-2 space-y-2">
+        {/* Network Switcher */}
+        {isExpanded && (
+          <div className="mb-2">
+            <NetworkSwitcher />
+          </div>
+        )}
+
         <button
           className={`
             w-full flex items-center gap-3 px-3 py-2.5 rounded-lg

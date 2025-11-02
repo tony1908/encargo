@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { WagmiProvider } from "@privy-io/wagmi";
 import { wagmiConfig } from "@/config/wagmi";
+import { arbitrumSepolia, scrollSepolia } from "viem/chains";
 
 const queryClient = new QueryClient();
 
@@ -18,10 +19,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             createOnLogin: "users-without-wallets",
           },
         },
-        appearance: { 
+        appearance: {
           walletChainType: "ethereum-only",
         },
         loginMethods: ["email"],
+        // Add supported chains
+        defaultChain: arbitrumSepolia,
+        supportedChains: [arbitrumSepolia, scrollSepolia],
       }}
     >
       <QueryClientProvider client={queryClient}>
