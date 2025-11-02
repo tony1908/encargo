@@ -9,6 +9,7 @@ import {
   MapIcon,
   ClockIcon,
   BanknotesIcon,
+  WalletIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   QuestionMarkCircleIcon,
@@ -52,6 +53,11 @@ export function Sidebar({ isExpanded, onToggle }: SidebarProps) {
       name: 'Claims',
       icon: BanknotesIcon,
       path: '/dashboard/claim',
+    },
+    {
+      name: 'Balance',
+      icon: WalletIcon,
+      path: '/dashboard/balance',
     },
   ];
 
