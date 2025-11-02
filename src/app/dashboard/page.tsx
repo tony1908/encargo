@@ -185,7 +185,7 @@ export default function DashboardPage() {
         <div className="bg-white p-4 rounded-lg border border-gray-100">
           <div className="flex items-baseline gap-2">
             <div className="text-xl font-medium text-gray-900">
-              {parseFloat(stats.totalCoverage).toFixed(2)} ETH
+              {parseFloat(stats.totalCoverage).toFixed(2)} MXN
             </div>
           </div>
           <div className="text-xs text-gray-500 mt-1">Max Coverage</div>

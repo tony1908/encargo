@@ -111,7 +111,7 @@ export default function BalancePage() {
               <BanknotesIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">Insurance Token</p>
+              <p className="text-xs text-gray-500">MXN Token</p>
               <p className="text-sm font-medium text-gray-900">Balance</p>
             </div>
           </div>
@@ -123,7 +123,7 @@ export default function BalancePage() {
               ) : (
                 <>
                   {parseFloat(tokenBalance).toFixed(4)}
-                  <span className="text-lg text-gray-500 ml-2">Tokens</span>
+                  <span className="text-lg text-gray-500 ml-2">MXN</span>
                 </>
               )}
             </p>
@@ -188,13 +188,13 @@ export default function BalancePage() {
         <div className="space-y-4">
           <div className="flex justify-between items-start pb-3 border-b border-gray-50">
             <div>
-              <p className="text-sm text-gray-900 mb-1">Insurance Tokens</p>
+              <p className="text-sm text-gray-900 mb-1">Insurance MXN</p>
               <p className="text-xs text-gray-500">
                 Used to purchase insurance policies and receive claim payouts
               </p>
             </div>
             <span className="text-sm font-medium text-gray-900">
-              {parseFloat(tokenBalance).toFixed(4)}
+              {parseFloat(tokenBalance).toFixed(4)} MXN
             </span>
           </div>
 

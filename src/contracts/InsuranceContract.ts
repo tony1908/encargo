@@ -10,8 +10,8 @@ export const NETWORK_CONFIG = {
   },
   [scrollSepolia.id]: {
     name: 'Scroll Sepolia',
-    insuranceContract: '0xDE5d818E49F12E1feB107F320276D84Cb544b767', // Update with actual Scroll address
-    tokenContract: '0x8420eEC4b6C5Df04D3bf8eA282aD2C8bE35858Cd', // Update with actual Scroll token address
+    insuranceContract: '0x8420eEC4b6C5Df04D3bf8eA282aD2C8bE35858Cd',
+    tokenContract: '0xd880112AeC1307eBE2886e4fB0daec82564f3a65',
     explorer: 'https://sepolia.scrollscan.com',
   },
 } as const;
