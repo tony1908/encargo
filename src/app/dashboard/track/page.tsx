@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Map, Marker } from 'pigeon-maps';
 import { MagnifyingGlassIcon, MapPinIcon, TruckIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import { useAccount, usePublicClient } from 'wagmi';
-import { INSURANCE_CONTRACT_ADDRESS, INSURANCE_CONTRACT_ABI } from '@/contracts/InsuranceContract';
-import { arbitrumSepolia } from 'viem/chains';
+import { useAccount, usePublicClient, useChainId } from 'wagmi';
+import { INSURANCE_CONTRACT_ABI } from '@/contracts/InsuranceContract';
+import { useContractAddresses } from '@/hooks/useContractAddresses';
+import { getTerminal49Route, getCurrentLocationFromRoute, type Terminal49Port, type Terminal49RouteLocation } from '@/utils/terminal49';
 
 interface PolicyTrackingData {
   policyId: number;
@@ -36,7 +37,9 @@ interface PolicyTrackingData {
 
 export default function TrackContainerPage() {
   const { address } = useAccount();
-  const publicClient = usePublicClient({ chainId: arbitrumSepolia.id });
+  const chainId = useChainId();
+  const publicClient = usePublicClient({ chainId });
+  const { insuranceContract: INSURANCE_CONTRACT_ADDRESS } = useContractAddresses();
   const [containerNumber, setContainerNumber] = useState('');
   const [trackingData, setTrackingData] = useState<PolicyTrackingData | null>(null);
   const [availablePolicies, setAvailablePolicies] = useState<any[]>([]);
@@ -104,82 +107,62 @@ export default function TrackContainerPage() {
         return;
       }
 
-      // Define waypoints for trans-Pacific shipping route
-      const waypoints = [
-        { lat: 31.2304, lng: 121.4737, name: 'Shanghai, China' },        // Origin
-        { lat: 20.0, lng: 140.0, name: 'Philippine Sea' },               // Philippine Sea
-        { lat: 25.0, lng: 160.0, name: 'Mid-Pacific' },                  // Mid-Pacific
-        { lat: 30.0, lng: -170.0, name: 'North Pacific' },               // North Pacific
-        { lat: 32.0, lng: -140.0, name: 'Eastern Pacific' },             // Eastern Pacific
-        { lat: 33.7701, lng: -118.1937, name: 'Los Angeles, USA' },      // Destination
-      ];
+      // Terminal49 API call
+      console.log('📡 Terminal49 API call...');
+      const terminal49Response = getTerminal49Route(
+        matchingPolicy.containerNumber,
+        matchingPolicy.expectedArrival
+      );
 
-      // Calculate current position based on time elapsed
-      const now = Date.now();
-      const expectedArrivalTime = matchingPolicy.expectedArrival.getTime();
-      const startDate = new Date(expectedArrivalTime - 25 * 24 * 60 * 60 * 1000); // 25 days before arrival
-      const totalJourney = expectedArrivalTime - startDate.getTime();
-      const elapsed = now - startDate.getTime();
+      // Extract route locations from Terminal49 response
+      const routeLocations = terminal49Response.included.filter(
+        item => item.type === 'route_location'
+      ) as Terminal49RouteLocation[];
 
-      // Calculate progress with bounds
-      let progress = Math.min(Math.max(elapsed / totalJourney, 0), 1);
+      const ports = terminal49Response.included.filter(
+        item => item.type === 'port'
+      ) as Terminal49Port[];
 
-      // If delivered, ship is at destination
-      if (matchingPolicy.delivered) {
-        progress = 1;
-      }
-      // If the expected arrival is far in the future or past, place ship in mid-ocean
-      else if (progress < 0.1 || expectedArrivalTime < now - 30 * 24 * 60 * 60 * 1000) {
-        // Place at mid-ocean point for visibility
-        progress = 0.5;
-      }
+      // Get current location from Terminal49 data
+      const currentLocation = getCurrentLocationFromRoute(terminal49Response);
 
-      // Calculate current position along waypoints
-      const segmentCount = waypoints.length - 1;
-      const segmentProgress = progress * segmentCount;
-      const currentSegment = Math.min(Math.floor(segmentProgress), segmentCount - 1);
-      const segmentFraction = segmentProgress - currentSegment;
+      // Build timeline from Terminal49 route locations
+      const timeline = routeLocations.map((routeLoc, index) => {
+        const port = ports.find(p => p.id === routeLoc.relationships.location.data.id);
+        const now = new Date();
 
-      const startPoint = waypoints[currentSegment];
-      const endPoint = waypoints[currentSegment + 1];
+        const eta = routeLoc.attributes.inbound_eta_at
+          ? new Date(routeLoc.attributes.inbound_eta_at)
+          : null;
+        const ata = routeLoc.attributes.inbound_ata_at
+          ? new Date(routeLoc.attributes.inbound_ata_at)
+          : null;
+        const atd = routeLoc.attributes.outbound_atd_at
+          ? new Date(routeLoc.attributes.outbound_atd_at)
+          : null;
 
-      const currentLat = startPoint.lat + (endPoint.lat - startPoint.lat) * segmentFraction;
-      const currentLng = startPoint.lng + (endPoint.lng - startPoint.lng) * segmentFraction;
+        const isCompleted = ata !== null;
+        const isDeparted = atd !== null;
+        const isCurrent = isCompleted && !isDeparted;
 
-      // Determine location name based on current segment
-      let locationName = endPoint.name;
-      if (progress < 0.2) locationName = 'East China Sea';
-      else if (progress < 0.4) locationName = 'Philippine Sea';
-      else if (progress < 0.6) locationName = 'Mid-Pacific Ocean';
-      else if (progress < 0.8) locationName = 'North Pacific Ocean';
-      else if (progress < 0.95) locationName = 'Eastern Pacific';
-      else if (progress >= 1) locationName = 'Los Angeles Port';
-
-      // Generate timeline based on waypoints
-      const timeline = [];
-      const journeyStages = [
-        { progress: 0, location: 'Shanghai, China', status: 'Departed' },
-        { progress: 0.2, location: 'Philippine Sea', status: 'At Sea' },
-        { progress: 0.4, location: 'Mid-Pacific Ocean', status: 'Transit' },
-        { progress: 0.6, location: 'North Pacific', status: 'At Sea' },
-        { progress: 0.8, location: 'Eastern Pacific', status: 'Approaching USA' },
-        { progress: 1, location: 'Los Angeles, USA', status: matchingPolicy.delivered ? 'Delivered' : 'Expected Arrival' },
-      ];
-
-      journeyStages.forEach((stage, index) => {
-        const stageTime = startDate.getTime() + (totalJourney * stage.progress);
-        const isCompleted = progress >= stage.progress;
-        const isCurrent = index === journeyStages.findIndex(s => s.progress > progress) - 1 ||
-                         (progress >= 1 && index === journeyStages.length - 1);
-
-        timeline.push({
-          location: stage.location,
-          date: new Date(stageTime).toLocaleDateString(),
-          status: stage.status,
+        return {
+          location: port?.attributes.name || 'Unknown Port',
+          portCode: port?.attributes.code || '',
+          date: (ata || eta)?.toLocaleDateString() || 'TBD',
+          status: isDeparted
+            ? 'Departed'
+            : isCompleted
+            ? 'At Port'
+            : 'Expected',
           completed: isCompleted,
           current: isCurrent && !matchingPolicy.delivered,
-        });
+          vessel: routeLoc.attributes.inbound_voyage_number || 'N/A',
+        };
       });
+
+      // Get origin and destination ports
+      const originPort = ports[0];
+      const destPort = ports[ports.length - 1];
 
       const trackingInfo: PolicyTrackingData = {
         policyId: matchingPolicy.policyId,
@@ -188,19 +171,19 @@ export default function TrackContainerPage() {
                 matchingPolicy.delayed ? 'Delayed' :
                 'In Transit',
         currentLocation: {
-          name: matchingPolicy.delivered ? 'Los Angeles Port' : locationName,
-          lat: matchingPolicy.delivered ? waypoints[waypoints.length - 1].lat : currentLat,
-          lng: matchingPolicy.delivered ? waypoints[waypoints.length - 1].lng : currentLng,
+          name: currentLocation.name,
+          lat: currentLocation.latitude,
+          lng: currentLocation.longitude,
         },
         origin: {
-          name: waypoints[0].name,
-          lat: waypoints[0].lat,
-          lng: waypoints[0].lng,
+          name: originPort.attributes.name,
+          lat: originPort.attributes.latitude,
+          lng: originPort.attributes.longitude,
         },
         destination: {
-          name: waypoints[waypoints.length - 1].name,
-          lat: waypoints[waypoints.length - 1].lat,
-          lng: waypoints[waypoints.length - 1].lng,
+          name: destPort.attributes.name,
+          lat: destPort.attributes.latitude,
+          lng: destPort.attributes.longitude,
         },
         expectedArrival: matchingPolicy.expectedArrival.toLocaleDateString(),
         estimatedArrival: matchingPolicy.delayed ?

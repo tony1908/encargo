@@ -10,6 +10,7 @@ import {
   ClockIcon,
   BanknotesIcon,
   WalletIcon,
+  GlobeAltIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   QuestionMarkCircleIcon,
@@ -58,6 +59,11 @@ export function Sidebar({ isExpanded, onToggle }: SidebarProps) {
       name: 'Balance',
       icon: WalletIcon,
       path: '/dashboard/balance',
+    },
+    {
+      name: 'ENS Domains',
+      icon: GlobeAltIcon,
+      path: '/dashboard/ens',
     },
   ];
 
