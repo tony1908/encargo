@@ -59,36 +59,35 @@ export default function TrackContainerPage() {
 
   const handleTrack = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API call
     setTrackingData(mockTrackingData);
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Track Container</h1>
-        <p className="text-gray-600">Real-time location tracking of your cargo</p>
+        <h1 className="text-2xl font-medium text-gray-900">Track Container</h1>
+        <p className="text-sm text-gray-500 mt-1">Real-time cargo location</p>
       </div>
 
-      {/* Search Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+      {/* Search */}
+      <div className="bg-white rounded-lg border border-gray-100 p-4 mb-6">
         <form onSubmit={handleTrack} className="flex gap-3">
           <div className="flex-1 relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />
             </div>
             <input
               type="text"
               value={containerNumber}
               onChange={(e) => setContainerNumber(e.target.value)}
-              placeholder="Enter container tracking number (e.g., MSCU1234567)"
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+              placeholder="Enter container number (e.g., MSCU1234567)"
+              className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:border-gray-900 outline-none transition text-sm"
               required
             />
           </div>
           <button
             type="submit"
-            className="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+            className="px-6 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
           >
             Track
           </button>
@@ -97,14 +96,14 @@ export default function TrackContainerPage() {
 
       {trackingData && (
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Map Section */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-4 border-b border-gray-100">
+          {/* Map */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+              <div className="p-3 border-b border-gray-100">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-gray-900">Current Location</h2>
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <h2 className="text-sm font-medium text-gray-900">Location</h2>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="w-1.5 h-1.5 bg-gray-900 rounded-full animate-pulse"></div>
                     <span className="text-gray-600">Live</span>
                   </div>
                 </div>
@@ -114,38 +113,38 @@ export default function TrackContainerPage() {
                   defaultCenter={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
                   defaultZoom={4}
                 >
-                  {/* Origin Marker */}
+                  {/* Origin */}
                   <Marker
-                    width={40}
+                    width={30}
                     anchor={[trackingData.origin.lat, trackingData.origin.lng]}
-                    color="#6366f1"
+                    color="#9ca3af"
                   />
-                  {/* Current Location Marker */}
-                  <Marker
-                    width={50}
-                    anchor={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
-                    color="#10b981"
-                  />
-                  {/* Destination Marker */}
+                  {/* Current */}
                   <Marker
                     width={40}
+                    anchor={[trackingData.currentLocation.lat, trackingData.currentLocation.lng]}
+                    color="#111827"
+                  />
+                  {/* Destination */}
+                  <Marker
+                    width={30}
                     anchor={[trackingData.destination.lat, trackingData.destination.lng]}
-                    color="#f59e0b"
+                    color="#d1d5db"
                   />
                 </Map>
               </div>
-              <div className="p-4 bg-gray-50 border-t border-gray-100">
-                <div className="flex items-center gap-6 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+              <div className="p-3 bg-gray-50 border-t border-gray-100">
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full"></div>
                     <span className="text-gray-600">Origin</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 bg-gray-900 rounded-full"></div>
                     <span className="text-gray-600">Current</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 bg-gray-300 rounded-full"></div>
                     <span className="text-gray-600">Destination</span>
                   </div>
                 </div>
@@ -153,51 +152,49 @@ export default function TrackContainerPage() {
             </div>
 
             {/* Timeline */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="font-semibold text-gray-900 mb-6">Shipment Timeline</h2>
-              <div className="space-y-6">
+            <div className="bg-white rounded-lg border border-gray-100 p-6">
+              <h2 className="text-sm font-medium text-gray-900 mb-4">Timeline</h2>
+              <div className="space-y-4">
                 {trackingData.timeline.map((event: any, index: number) => (
-                  <div key={index} className="flex gap-4">
+                  <div key={index} className="flex gap-3">
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
                           event.completed
-                            ? 'bg-green-500'
+                            ? 'bg-gray-900'
                             : index === 2
-                            ? 'bg-blue-500'
-                            : 'bg-gray-300'
+                            ? 'bg-gray-600'
+                            : 'bg-gray-200'
                         }`}
                       >
                         {event.completed ? (
-                          <CheckCircleIcon className="w-6 h-6 text-white" />
+                          <CheckCircleIcon className="w-4 h-4 text-white" />
                         ) : index === 2 ? (
-                          <TruckIcon className="w-6 h-6 text-white" />
+                          <TruckIcon className="w-4 h-4 text-white" />
                         ) : (
-                          <MapPinIcon className="w-6 h-6 text-white" />
+                          <MapPinIcon className="w-4 h-4 text-gray-500" />
                         )}
                       </div>
                       {index < trackingData.timeline.length - 1 && (
                         <div
-                          className={`w-0.5 h-12 ${
-                            event.completed ? 'bg-green-500' : 'bg-gray-300'
+                          className={`w-0.5 h-10 ${
+                            event.completed ? 'bg-gray-900' : 'bg-gray-200'
                           }`}
                         ></div>
                       )}
                     </div>
-                    <div className="flex-1 pb-6">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-medium text-gray-900">{event.location}</h3>
-                        <span className="text-sm text-gray-500">{event.date}</span>
+                    <div className="flex-1 pb-4">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <h3 className="text-sm font-medium text-gray-900">{event.location}</h3>
+                        <span className="text-xs text-gray-500">{event.date}</span>
                       </div>
-                      <p
-                        className={`text-sm ${
-                          event.completed
-                            ? 'text-green-600'
-                            : index === 2
-                            ? 'text-blue-600'
-                            : 'text-gray-600'
-                        }`}
-                      >
+                      <p className={`text-xs ${
+                        event.completed
+                          ? 'text-gray-600'
+                          : index === 2
+                          ? 'text-gray-900'
+                          : 'text-gray-500'
+                      }`}>
                         {event.status}
                       </p>
                     </div>
@@ -208,27 +205,27 @@ export default function TrackContainerPage() {
           </div>
 
           {/* Info Panel */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Container Info */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="font-semibold text-gray-900 mb-4">Container Information</h2>
+            <div className="bg-white rounded-lg border border-gray-100 p-4">
+              <h2 className="text-sm font-medium text-gray-900 mb-3">Container</h2>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Container Number</p>
-                  <p className="font-mono font-semibold text-gray-900">
+                  <p className="text-xs text-gray-500">Number</p>
+                  <p className="font-mono text-sm text-gray-900 mt-0.5">
                     {trackingData.containerNumber}
                   </p>
                 </div>
-                <div className="pt-3 border-t border-gray-100">
-                  <p className="text-sm text-gray-600 mb-1">Status</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <p className="font-semibold text-blue-600">{trackingData.status}</p>
+                <div className="pt-2 border-t border-gray-50">
+                  <p className="text-xs text-gray-500">Status</p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <div className="w-1.5 h-1.5 bg-gray-900 rounded-full"></div>
+                    <p className="text-sm text-gray-900">{trackingData.status}</p>
                   </div>
                 </div>
-                <div className="pt-3 border-t border-gray-100">
-                  <p className="text-sm text-gray-600 mb-1">Current Location</p>
-                  <p className="font-semibold text-gray-900">
+                <div className="pt-2 border-t border-gray-50">
+                  <p className="text-xs text-gray-500">Location</p>
+                  <p className="text-sm text-gray-900 mt-0.5">
                     {trackingData.currentLocation.name}
                   </p>
                 </div>
@@ -236,36 +233,36 @@ export default function TrackContainerPage() {
             </div>
 
             {/* Delivery Info */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="font-semibold text-gray-900 mb-4">Delivery Information</h2>
+            <div className="bg-white rounded-lg border border-gray-100 p-4">
+              <h2 className="text-sm font-medium text-gray-900 mb-3">Delivery</h2>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Origin</p>
-                  <p className="font-semibold text-gray-900">{trackingData.origin.name}</p>
+                  <p className="text-xs text-gray-500">Origin</p>
+                  <p className="text-sm text-gray-900 mt-0.5">{trackingData.origin.name}</p>
                 </div>
-                <div className="pt-3 border-t border-gray-100">
-                  <p className="text-sm text-gray-600 mb-1">Destination</p>
-                  <p className="font-semibold text-gray-900">{trackingData.destination.name}</p>
+                <div className="pt-2 border-t border-gray-50">
+                  <p className="text-xs text-gray-500">Destination</p>
+                  <p className="text-sm text-gray-900 mt-0.5">{trackingData.destination.name}</p>
                 </div>
-                <div className="pt-3 border-t border-gray-100">
-                  <p className="text-sm text-gray-600 mb-1">Expected Arrival</p>
-                  <p className="font-semibold text-gray-900">{trackingData.expectedArrival}</p>
+                <div className="pt-2 border-t border-gray-50">
+                  <p className="text-xs text-gray-500">Expected</p>
+                  <p className="text-sm text-gray-900 mt-0.5">{trackingData.expectedArrival}</p>
                 </div>
-                <div className="pt-3 border-t border-gray-100">
-                  <p className="text-sm text-gray-600 mb-1">Estimated Arrival</p>
-                  <p className="font-semibold text-green-600">{trackingData.estimatedArrival}</p>
+                <div className="pt-2 border-t border-gray-50">
+                  <p className="text-xs text-gray-500">Estimated</p>
+                  <p className="text-sm text-gray-900 mt-0.5">{trackingData.estimatedArrival}</p>
                 </div>
               </div>
             </div>
 
-            {/* Status Badge */}
-            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircleIcon className="w-6 h-6" />
-                <h3 className="font-semibold">On Schedule</h3>
+            {/* Status */}
+            <div className="bg-gray-900 text-white rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircleIcon className="w-4 h-4" />
+                <h3 className="text-sm font-medium">On Schedule</h3>
               </div>
-              <p className="text-sm text-green-100">
-                Your container is on track for on-time delivery
+              <p className="text-xs text-gray-300">
+                Container tracking on time for delivery
               </p>
             </div>
           </div>
@@ -273,13 +270,11 @@ export default function TrackContainerPage() {
       )}
 
       {!trackingData && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-          <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MapPinIcon className="w-8 h-8 text-indigo-600" />
-          </div>
-          <h3 className="font-semibold text-gray-900 mb-2">Track Your Container</h3>
-          <p className="text-sm text-gray-600 max-w-md mx-auto">
-            Enter your container tracking number above to view real-time location and shipment status
+        <div className="bg-white rounded-lg border border-gray-100 p-12 text-center">
+          <MapPinIcon className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+          <h3 className="text-sm font-medium text-gray-900 mb-1">Track Your Container</h3>
+          <p className="text-xs text-gray-500">
+            Enter tracking number to view real-time location
           </p>
         </div>
       )}

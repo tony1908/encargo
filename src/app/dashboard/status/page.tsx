@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircleIcon, ClockIcon, XCircleIcon, TruckIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, ClockIcon, TruckIcon } from '@heroicons/react/24/outline';
 
 export default function DeliveryStatusPage() {
   // Mock data for active shipments
@@ -62,13 +62,13 @@ export default function DeliveryStatusPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'on-time':
-        return <CheckCircleIcon className="w-6 h-6 text-green-500" />;
+        return <CheckCircleIcon className="w-5 h-5 text-gray-600" />;
       case 'delayed':
-        return <ClockIcon className="w-6 h-6 text-orange-500" />;
+        return <ClockIcon className="w-5 h-5 text-gray-900" />;
       case 'delivered':
-        return <CheckCircleIcon className="w-6 h-6 text-blue-500" />;
+        return <CheckCircleIcon className="w-5 h-5 text-gray-400" />;
       default:
-        return <TruckIcon className="w-6 h-6 text-gray-500" />;
+        return <TruckIcon className="w-5 h-5 text-gray-500" />;
     }
   };
 
@@ -76,25 +76,25 @@ export default function DeliveryStatusPage() {
     switch (status) {
       case 'on-time':
         return (
-          <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+          <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded">
             On Time
           </span>
         );
       case 'delayed':
         return (
-          <span className="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+          <span className="px-2 py-0.5 bg-gray-900 text-white text-xs font-medium rounded">
             Delayed
           </span>
         );
       case 'delivered':
         return (
-          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+          <span className="px-2 py-0.5 bg-gray-50 text-gray-600 text-xs font-medium rounded">
             Delivered
           </span>
         );
       default:
         return (
-          <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
+          <span className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded">
             Unknown
           </span>
         );
@@ -109,159 +109,132 @@ export default function DeliveryStatusPage() {
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Delivery Status</h1>
-        <p className="text-gray-600">Monitor all your insured shipments</p>
+        <h1 className="text-2xl font-medium text-gray-900">Delivery Status</h1>
+        <p className="text-sm text-gray-500 mt-1">Monitor your shipments</p>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="text-2xl font-bold text-gray-900 mb-1">{stats.total}</div>
-          <div className="text-sm text-gray-600">Total Shipments</div>
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
+          <div className="text-xl font-medium text-gray-900">{stats.total}</div>
+          <div className="text-xs text-gray-500 mt-1">Total</div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="text-2xl font-bold text-green-600 mb-1">{stats.onTime}</div>
-          <div className="text-sm text-gray-600">On Time</div>
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
+          <div className="text-xl font-medium text-gray-900">{stats.onTime}</div>
+          <div className="text-xs text-gray-500 mt-1">On Time</div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="text-2xl font-bold text-orange-600 mb-1">{stats.delayed}</div>
-          <div className="text-sm text-gray-600">Delayed</div>
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
+          <div className="text-xl font-medium text-gray-900">{stats.delayed}</div>
+          <div className="text-xs text-gray-500 mt-1">Delayed</div>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="text-2xl font-bold text-blue-600 mb-1">{stats.delivered}</div>
-          <div className="text-sm text-gray-600">Delivered</div>
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
+          <div className="text-xl font-medium text-gray-900">{stats.delivered}</div>
+          <div className="text-xs text-gray-500 mt-1">Delivered</div>
         </div>
       </div>
 
       {/* Shipments List */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {shipments.map((shipment) => (
           <div
             key={shipment.id}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
+            className="bg-white rounded-lg border border-gray-100 p-6 hover:border-gray-200 transition-colors"
           >
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start gap-4">
-                  <div className="mt-1">{getStatusIcon(shipment.status)}</div>
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-mono font-semibold text-gray-900">
-                        {shipment.containerNumber}
-                      </h3>
-                      {getStatusBadge(shipment.status)}
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {shipment.origin} → {shipment.destination}
-                    </p>
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5">{getStatusIcon(shipment.status)}</div>
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="font-mono text-sm font-medium text-gray-900">
+                      {shipment.containerNumber}
+                    </h3>
+                    {getStatusBadge(shipment.status)}
                   </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 pt-4 border-t border-gray-100">
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Merchandise Value</p>
-                  <p className="font-semibold text-gray-900">
-                    ${shipment.merchandiseValue.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Expected Arrival</p>
-                  <p className="font-semibold text-gray-900">{shipment.expectedArrival}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">
-                    {shipment.status === 'delivered' ? 'Delivered' : 'Estimated Arrival'}
-                  </p>
-                  <p
-                    className={`font-semibold ${
-                      shipment.status === 'delayed'
-                        ? 'text-orange-600'
-                        : shipment.status === 'delivered'
-                        ? 'text-blue-600'
-                        : 'text-green-600'
-                    }`}
-                  >
-                    {shipment.status === 'delivered'
-                      ? shipment.deliveryDate
-                      : shipment.estimatedArrival}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">Current Location</p>
-                  <p className="font-semibold text-gray-900">{shipment.currentLocation}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 mb-1">
-                    {shipment.status === 'on-time'
-                      ? 'Days Until Arrival'
-                      : shipment.status === 'delayed'
-                      ? 'Days Delayed'
-                      : 'Status'}
-                  </p>
-                  <p
-                    className={`font-semibold ${
-                      shipment.status === 'delayed'
-                        ? 'text-orange-600'
-                        : shipment.status === 'delivered'
-                        ? 'text-blue-600'
-                        : 'text-green-600'
-                    }`}
-                  >
-                    {shipment.status === 'on-time'
-                      ? `${shipment.daysUntilArrival} days`
-                      : shipment.status === 'delayed'
-                      ? `${shipment.daysDelayed} days`
-                      : 'Complete'}
+                  <p className="text-xs text-gray-500">
+                    {shipment.origin} → {shipment.destination}
                   </p>
                 </div>
               </div>
-
-              {shipment.status === 'delayed' && (
-                <div className="mt-4 p-4 bg-orange-50 border border-orange-100 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <ClockIcon className="w-5 h-5 text-orange-600 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-orange-900 mb-1">
-                        Delay Detected - Claim Available
-                      </p>
-                      <p className="text-sm text-orange-700 mb-3">
-                        This shipment is {shipment.daysDelayed} days delayed. You can file a claim to
-                        receive ${(shipment.merchandiseValue * 0.01 * shipment.daysDelayed!).toLocaleString()} in
-                        compensation.
-                      </p>
-                      <button className="px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 transition-colors">
-                        File Claim
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {shipment.status === 'on-time' && (
-                <div className="mt-4 p-4 bg-green-50 border border-green-100 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                    <p className="text-sm text-green-700">
-                      This shipment is on schedule for on-time delivery
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {shipment.status === 'delivered' && (
-                <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <CheckCircleIcon className="w-5 h-5 text-blue-600" />
-                    <p className="text-sm text-blue-700">
-                      Successfully delivered on time - No claim needed
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
+
+            <div className="grid grid-cols-5 gap-4 pt-3 border-t border-gray-50">
+              <div>
+                <p className="text-xs text-gray-500">Value</p>
+                <p className="text-sm font-medium text-gray-900 mt-0.5">
+                  ${shipment.merchandiseValue.toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Expected</p>
+                <p className="text-sm font-medium text-gray-900 mt-0.5">{shipment.expectedArrival}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">
+                  {shipment.status === 'delivered' ? 'Delivered' : 'Estimated'}
+                </p>
+                <p className={`text-sm font-medium mt-0.5 ${
+                  shipment.status === 'delayed' ? 'text-gray-900' : 'text-gray-900'
+                }`}>
+                  {shipment.status === 'delivered'
+                    ? shipment.deliveryDate
+                    : shipment.estimatedArrival}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Location</p>
+                <p className="text-sm font-medium text-gray-900 mt-0.5">{shipment.currentLocation}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">
+                  {shipment.status === 'on-time'
+                    ? 'Days Left'
+                    : shipment.status === 'delayed'
+                    ? 'Days Delayed'
+                    : 'Status'}
+                </p>
+                <p className={`text-sm font-medium mt-0.5 ${
+                  shipment.status === 'delayed' ? 'text-gray-900' : 'text-gray-900'
+                }`}>
+                  {shipment.status === 'on-time'
+                    ? `${shipment.daysUntilArrival}d`
+                    : shipment.status === 'delayed'
+                    ? `${shipment.daysDelayed}d`
+                    : 'Complete'}
+                </p>
+              </div>
+            </div>
+
+            {shipment.status === 'delayed' && (
+              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      Claim Available
+                    </p>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      ${(shipment.merchandiseValue * 0.01 * shipment.daysDelayed!).toLocaleString()} compensation
+                    </p>
+                  </div>
+                  <button className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded hover:bg-gray-800 transition-colors">
+                    File Claim
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {shipment.status === 'on-time' && (
+              <div className="mt-4 text-xs text-gray-500">
+                On schedule for delivery
+              </div>
+            )}
+
+            {shipment.status === 'delivered' && (
+              <div className="mt-4 text-xs text-gray-500">
+                Successfully delivered on time
+              </div>
+            )}
           </div>
         ))}
       </div>
