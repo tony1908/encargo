@@ -59,7 +59,7 @@ export default function DashboardPage() {
             <div className="flex items-baseline gap-2">
               <div className="text-xl font-medium text-gray-900">{stat.value}</div>
               {stat.trend && (
-                <span className={`text-xs ${stat.trend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+                <span className={`text-xs ${stat.trend.startsWith('+') ? 'text-gray-900' : 'text-gray-500'}`}>
                   {stat.trend}
                 </span>
               )}
